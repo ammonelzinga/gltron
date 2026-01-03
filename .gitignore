@@ -1,0 +1,23 @@
+# Binaries and archives
+*.exe
+*.dll
+*.pdb
+*.zip
+*.7z
+*.tar
+*.tar.gz
+
+# Build artifacts
+bin/
+obj/
+build/
+dist/
+Release/
+Debug/
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log
