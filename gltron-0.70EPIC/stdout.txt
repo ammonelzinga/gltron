@@ -1,0 +1,51 @@
+[error] cannot load gltron.ini from (null)/gltron.ini
+[warning] old config file found, overriding using defaults
+[warning] defunct config file found, overriding using defaults
+using min_filter: 9987 (setting: 3)
+[script] calling action of 'GameMenu', type 1
+[script] calling action of 'GameSettingsMenu', type 1
+[script] calling action of 'TeamMode', type 2
+[script] calling action of 'StartGame', type 7
+boost down
+boost up
+[script] calling action of 'GameMenu', type 1
+[script] calling action of 'GameSettingsMenu', type 1
+[script] calling action of 'SnakeMode', type 2
+[script] calling action of 'StartGame', type 7
+tdiff decision
+tdiff decision
+tdiff decision
+tdiff decision
+[script] calling action of 'VideoMenu', type 1
+[script] calling action of 'ScreenMenu', type 1
+[script] calling action of '_1024x768', type 7
+using min_filter: 9987 (setting: 3)
+[script] calling action of '_1600x1200', type 7
+using min_filter: 9987 (setting: 3)
+[script] calling action of '_1280x1024', type 7
+using min_filter: 9987 (setting: 3)
+[script] calling action of '_800x600', type 7
+using min_filter: 9987 (setting: 3)
+[script] calling action of '_1024x768', type 7
+using min_filter: 9987 (setting: 3)
+[script] calling action of 'GameMenu', type 1
+[script] calling action of 'KeyConfigMenu', type 1
+[script] calling action of 'Player1_KeyMenu', type 1
+[script] calling action of 'Player1_Right', type 4
+[script] calling action of 'Player1_Booster', type 4
+[script] calling action of 'StartGame', type 7
+glance right down
+glance right up
+glance right down
+glance right up
+[script] calling action of 'GameMenu', type 1
+[script] calling action of 'KeyConfigMenu', type 1
+[script] calling action of 'Player1_KeyMenu', type 1
+[script] calling action of 'Player1_Booster', type 4
+[script] calling action of 'Player1_KeyMenu', type 1
+[script] calling action of 'Player1_GlanceRight', type 4
+[script] calling action of 'Player1_Booster', type 4
+[script] calling action of 'StartGame', type 7
+boost down
+[glError: gui background start] - 1282
+[glError: rasonly] - 1282

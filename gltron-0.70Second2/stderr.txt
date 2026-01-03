@@ -1,0 +1,8 @@
+[status] loading artpack 'default'
+key 'd' (100) is not bound
+key 'd' (100) is not bound
+key 's' (115) is not bound
+key 'a' (97) is not bound
+key 's' (115) is not bound
+[system] shutting down SDL now
+[system] exiting application

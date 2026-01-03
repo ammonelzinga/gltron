@@ -1,0 +1,27 @@
+[error] cannot load gltron.ini from (null)/gltron.ini
+[warning] old config file found, overriding using defaults
+[warning] defunct config file found, overriding using defaults
+using min_filter: 9987 (setting: 3)
+[script] calling action of 'GameMenu', type 1
+[script] calling action of 'StartGame', type 7
+boost down
+boost up
+boost down
+boost up
+boost down
+boost up
+boost up
+boost down
+boost up
+boost down
+boost up
+boost down
+boost up
+boost down
+boost up
+boost down
+boost up
+boost down
+boost up
+boost down
+boost u

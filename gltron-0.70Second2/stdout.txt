@@ -1,0 +1,16 @@
+[error] cannot load gltron.ini from (null)/gltron.ini
+[warning] old config file found, overriding using defaults
+[warning] defunct config file found, overriding using defaults
+using min_filter: 9987 (setting: 3)
+[script] calling action of 'GameMenu', type 1
+[script] calling action of 'GameSettingsMenu', type 1
+[script] calling action of 'SnakeMode', type 2
+[script] calling action of 'StartGame', type 7
+tdiff decision
+tdiff decision
+tdiff decision
+tdiff decision
+tdiff decision
+tdiff decision
+boost down
+[glEr

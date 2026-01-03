@@ -1,0 +1,25 @@
+[error] cannot load gltron.ini from (null)/gltron.ini
+[warning] old config file found, overriding using defaults
+[warning] defunct config file found, overriding using defaults
+using min_filter: 9987 (setting: 3)
+[script] calling action of 'GameMenu', type 1
+[script] calling action of 'GameRulesMenu', type 1
+[script] calling action of 'GameSettingsMenu', type 1
+[script] calling action of 'StartGame', type 7
+glance right down
+glance right up
+boost down
+boost up
+[script] calling action of 'GameMenu', type 1
+[script] calling action of 'PlayerConfigMenu', type 1
+[script] calling action of 'Player2', type 2
+[script] calling action of 'Player2', type 2
+[script] calling action of 'StartGame', type 7
+tdiff decision
+[script] calling action of 'GameMenu', type 1
+[script] calling action of 'GameSettingsMenu', type 1
+[script] calling action of 'GameRulesMenu', type 1
+[script] calling action of 'EraseDeadPlayers', type 2
+[script] calling action of 'StartGame', type 7
+[script] calling action of 'GameMenu', type 1
+[script] c
