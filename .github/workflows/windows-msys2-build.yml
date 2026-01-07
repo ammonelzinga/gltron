@@ -1,0 +1,60 @@
+name: Build Windows .exe (MSYS2)
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup MSYS2 (MINGW64)
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            mingw-w64-x86_64-toolchain
+            mingw-w64-x86_64-SDL
+            mingw-w64-x86_64-libpng
+            mingw-w64-x86_64-zlib
+
+      - name: Configure & Build
+        shell: msys2 {0}
+        working-directory: gltron-0.706PlayerTeamSnake
+        run: |
+          ./configure --enable-localdata
+          make -j2
+          test -f gltron.exe && echo "Built gltron.exe" || (echo "gltron.exe not found after build" && ls -la && exit 1)
+
+      - name: Package zip (win64)
+        shell: pwsh
+        working-directory: gltron-0.706PlayerTeamSnake
+        run: |
+          $pkg = "gltron-0.706PlayerTeamSnake-win64"
+          if (Test-Path $pkg) { Remove-Item -Recurse -Force $pkg }
+          New-Item -ItemType Directory -Path $pkg | Out-Null
+          Copy-Item gltron.exe "$pkg/"
+          $items = @("art","data","music","lua","scripts","gltron.ini")
+          foreach ($i in $items) { if (Test-Path $i) { Copy-Item -Recurse $i "$pkg/" } }
+          if (Test-Path "$pkg.zip") { Remove-Item "$pkg.zip" -Force }
+          Compress-Archive -Path $pkg -DestinationPath "$pkg.zip"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gltron-0.706PlayerTeamSnake-win64
+          path: gltron-0.706PlayerTeamSnake/gltron-0.706PlayerTeamSnake-win64.zip
+
+      - name: Attach asset to Release (on tag)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: gltron-0.706PlayerTeamSnake/gltron-0.706PlayerTeamSnake-win64.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
