@@ -24,11 +24,16 @@ jobs:
             mingw-w64-x86_64-libpng
             mingw-w64-x86_64-zlib
             make
+            autoconf
+            automake
+            libtool
+            mingw-w64-x86_64-pkg-config
 
-      - name: Configure & Build
+      - name: Autotools regen, Configure & Build
         shell: msys2 {0}
         run: |
           cd gltron-0.706PlayerTeamSnake
+          autoreconf -fi
           ./configure --enable-localdata
           make -j2
           test -f gltron.exe && echo "Built gltron.exe" || (echo "gltron.exe not found after build" && ls -la && exit 1)
