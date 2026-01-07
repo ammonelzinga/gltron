@@ -23,11 +23,12 @@ jobs:
             mingw-w64-x86_64-SDL
             mingw-w64-x86_64-libpng
             mingw-w64-x86_64-zlib
+            make
 
       - name: Configure & Build
         shell: msys2 {0}
-        working-directory: gltron-0.706PlayerTeamSnake
         run: |
+          cd gltron-0.706PlayerTeamSnake
           ./configure --enable-localdata
           make -j2
           test -f gltron.exe && echo "Built gltron.exe" || (echo "gltron.exe not found after build" && ls -la && exit 1)
