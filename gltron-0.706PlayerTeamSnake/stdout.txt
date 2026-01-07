@@ -1,0 +1,22 @@
+[error] cannot load gltron.ini from (null)/gltron.ini
+[warning] old config file found, overriding using defaults
+[warning] defunct config file found, overriding using defaults
+using min_filter: 9987 (setting: 3)
+[script] calling action of 'VideoMenu', type 1
+[script] calling action of 'ScreenMenu', type 1
+[script] calling action of 'WindowMode', type 2
+using min_filter: 9987 (setting: 3)
+[script] calling action of 'GameMenu', type 1
+[script] calling action of 'GameSettingsMenu', type 1
+[script] calling action of 'TeamMode', type 2
+[script] calling action of 'PlayerConfigMenu', type 1
+[script] calling action of 'Player2', type 2
+[script] calling action of 'Player2', type 2
+[script] calling action of 'Player3', type 2
+[script] calling action of 'Player3', type 2
+[script] calling action of 'Player4', type 2
+[script] calling action of 'Player4', type 2
+[script] calling action of 'Player5', type 2
+[script] calling action of 'Player5', type 2
+[script] calling action of 'Player5', type 2
+[script] calling action of '

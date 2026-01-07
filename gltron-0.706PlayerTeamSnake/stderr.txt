@@ -1,0 +1,25 @@
+[status] loading artpack 'default'
+[status] loading artpack 'default'
+key 's' (115) is not bound
+key 's' (115) is not bound
+key 's' (115) is not bound
+key 'j' (106) is not bound
+key 'j' (106) is not bound
+key 'g' (103) is not bound
+key 'g' (103) is not bound
+key 'right shift' (303) is not bound
+key 'left' (276) is not bound
+key 'right' (275) is not bound
+key 'left' (276) is not bound
+key 'right' (275) is not bound
+key 'left' (276) is not bound
+key 'right' (275) is not bound
+key 'left' (276) is not bound
+key 's' (115) is not bound
+key 'a' (97) is not bound
+key 's' (115) is not bound
+key 'j' (106) is not bound
+key 'j' (106) is not bound
+key 'j' (106) is not bound
+key 'l' (108) is not bound
+key 'h' (104) is not bound

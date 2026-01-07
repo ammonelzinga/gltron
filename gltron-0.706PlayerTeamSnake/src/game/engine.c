@@ -1,0 +1,338 @@
+#include "game/game.h"
+#include "video/video.h"
+#include "audio/audio.h"
+#include "Nebu_base.h"
+#include "game/event.h"
+#include "game/snake.h"
+
+/* from video/trail.c */
+extern float getDist(segment2 *s, float* eye);
+
+#include <math.h>
+
+void getPositionFromIndex(float *x, float *y, int player) {
+		getPositionFromData(x, y, game->player[player].data);
+}
+
+void getPositionFromData(float *x, float *y, Data *data) {
+		vec2 v;
+		vec2Add(&v,
+						&data->trails[data->trailOffset].vStart,
+						&data->trails[data->trailOffset].vDirection);
+		*x = v.v[0];
+		*y = v.v[1];
+}
+
+void initGameStructures(void) { /* called only once */
+	int i;
+
+	/* initialize some global variables */
+	game2 = &main_game2;
+	game = &main_game;
+	game->pauseflag = PAUSE_NO_GAME;
+
+	game->winner = -1;
+
+	game->players = PLAYERS;
+	game->player = (Player *) malloc(MAX_PLAYERS * sizeof(Player));
+
+	for(i = 0; i < game->players; i++) {
+		Player *p = game->player + i;
+
+		p->ai = (AI*) malloc(sizeof(AI));
+		p->data = (Data*) malloc(sizeof(Data));
+		p->data->trails = (segment2*) malloc(MAX_TRAIL * sizeof(segment2));
+		p->data->trailOffset = 0;
+		p->camera = (Camera*) malloc(sizeof(Camera));
+	}
+
+	game2->events.next = NULL;
+	game2->mode = GAME_SINGLE;
+
+	/* initialize team wins */
+	game->team_wins[0] = 0;
+	game->team_wins[1] = 0;
+	game->team_wins[2] = 0;
+}
+
+void resetPlayerData(void) {
+	int i;
+	Data *data;
+	AI *ai;
+	int not_playing = 0;
+
+	int *startIndex;
+	startIndex = (int*) malloc( game->players * sizeof(int) );
+	randomPermutation(game->players, startIndex);
+
+	for(i = 0; i < game->players; i++) {
+		float startpos[][2] = { 
+			/* base four */
+			{ 0.5f, 0.25f }, { 0.75f, 0.5f }, { 0.5f, 0.75f }, { 0.25f, 0.5f },
+			/* extra positions for players 5 and 6 */
+			{ 0.75f, 0.25f }, { 0.25f, 0.75f }
+		};
+		float x, y;
+
+		data = game->player[i].data;
+		ai = game->player[i].ai;
+		/* init ai */
+
+		switch(i) {
+		case 0: ai->active = getSettingi("ai_player1"); break;
+		case 1: ai->active = getSettingi("ai_player2"); break;
+		case 2: ai->active = getSettingi("ai_player3"); break;
+		case 3: ai->active = getSettingi("ai_player4"); break;
+		case 4: ai->active = getSettingi("ai_player5"); break;
+		case 5: ai->active = getSettingi("ai_player6"); break;
+		default:
+			fprintf(stderr, "[error] player index #%d not caught!\n", i);
+			ai->active = AI_NONE;
+		}
+		ai->tdiff = 0;
+
+		/* arrange players in circle around center */
+
+		/* randomize position on the grid */
+		x = startpos[ startIndex[i] ][0] * getSettingi("grid_size");
+		y = startpos[ startIndex[i] ][1] * getSettingi("grid_size");
+		/* randomize starting direction */
+		data->dir = trand() & 3;
+		/* data->dir = startdir[i]; */
+		data->last_dir = data->dir;
+
+		/* if player is playing... */
+		if(ai->active != AI_NONE) {
+			data->speed = getSettingf("speed");
+			data->booster = getSettingf("booster_max");
+			data->boost_enabled = 0;
+			data->trail_height = TRAIL_HEIGHT;
+		} else {
+			data->speed = SPEED_GONE;
+			data->trail_height = 0;
+			not_playing++;
+		}
+		/* initialize snake length */
+		if (gSettingsCache.snake_mode) {
+			data->snake_max_length = gSettingsCache.snake_initial_length;
+			data->snake_bugs_eaten = 0;
+		} else {
+			data->snake_max_length = 0.0f;
+			data->snake_bugs_eaten = 0;
+		}
+		// data->trail = data->trails;
+		data->trailOffset = 0;
+
+		data->trails[ data->trailOffset ].vStart.v[0] = x;
+		data->trails[ data->trailOffset ].vStart.v[1] = y;
+    
+		data->trails[ data->trailOffset ].vDirection.v[0] = 0;
+		data->trails[ data->trailOffset ].vDirection.v[1] = 0;
+
+		/* reset respawn credit tracking */
+		data->respawn_credit_team = -1;
+
+		{
+			int camType;
+			Camera *cam = game->player[i].camera;
+			camType = (game->player[i].ai->active == AI_COMPUTER) ? 
+				CAM_CIRCLE : gSettingsCache.camType;
+			initCamera(cam, data, camType);
+		}
+	}
+
+	free(startIndex);
+
+	game->running = game->players - not_playing; /* not everyone is alive */
+	/* printf("starting game with %d players\n", game->running); */
+	game->winner = -1;
+}
+
+void initData(void) {
+	/* lasttime = SystemGetElapsedTime(); */
+	game->pauseflag = PAUSE_GAME_RUNNING;
+
+	game2->rules.speed = getSettingf("speed");
+	game2->rules.eraseCrashed = getSettingi("erase_crashed");
+	game2->rules.grid_size = getSettingi("grid_size");
+
+	game2->grid.width = game2->rules.grid_size;
+	game2->grid.height = game2->rules.grid_size;
+
+	/* time management */
+	game2->time.lastFrame = 0;
+	game2->time.current = 0;
+	game2->time.offset = SystemGetElapsedTime();
+	/* TODO: fix that */
+	game2->players = game->players;
+	/* event management */
+	game2->events.next = NULL;
+	/* TODO: free any old events that might have gotten left */
+
+	resetVideoData();
+	resetPlayerData();
+
+	initWalls();
+	/* snake: set up round state */
+	if (gSettingsCache.snake_mode) {
+		snake_onRoundStart();
+	}
+}
+
+void Time_Idle(void) {
+	game2->time.lastFrame = game2->time.current;
+	game2->time.current = SystemGetElapsedTime() - game2->time.offset;
+	game2->time.dt = game2->time.current - game2->time.lastFrame;
+	/* fprintf(stderr, "dt: %d\n", game2->time.dt); */
+}
+
+void resetScores(void) {
+	int i;
+	for(i = 0; i < game->players; i++)
+		game->player[i].data->score = 0;
+	for(i = 0; i < game->players; i++)
+		game->player[i].data->trail_kills = 0;
+}
+
+void doCrashPlayer(GameEvent *e) {
+	int j;
+
+	Audio_CrashPlayer(e->player);
+	Audio_StopEngine(e->player);
+
+	for(j = 0; j < game->players; j++) 
+		if(j != e->player && PLAYER_IS_ACTIVE(&(game->player[j])))
+			game->player[j].data->score++;
+
+	/* Additional scoring for trail kills if enabled */
+	if(getSettingi("trail_kill_scoring")) {
+		if(e->cause == 1) {
+			/* Trail collision: award killer if not self */
+			if(e->killer >= 0 && e->killer != e->player)
+				game->player[e->killer].data->trail_kills++;
+		} else if(e->cause == 2) {
+			/* Wall collision: attribute to nearby opponent trail within 1 unit */
+			float eye[2];
+			int best = -1; float bestDist = 1.0f;
+			int k;
+			eye[0] = e->x; eye[1] = e->y;
+			for(k = 0; k < game->players; k++) {
+				if(k == e->player) continue;
+				if(game->player[k].data->trail_height < TRAIL_HEIGHT) continue;
+				int t;
+				for(t = 0; t <= game->player[k].data->trailOffset; t++) {
+					segment2 *seg = game->player[k].data->trails + t;
+					float d = getDist(seg, eye);
+					if(d <= bestDist) { bestDist = d; best = k; }
+				}
+			}
+			if(best >= 0)
+				game->player[best].data->trail_kills++;
+		}
+	}
+
+	/* Team-mode (3 teams): determine which opponent team earns a respawn for this crash */
+	{
+		int threeTeams = 0;
+		if (gSettingsCache.team_mode) {
+			/* consider 3-team mode only when team 3 has any active player */
+			if ((game->player[4].ai && game->player[4].ai->active != AI_NONE) ||
+					(game->player[5].ai && game->player[5].ai->active != AI_NONE)) {
+				threeTeams = 1;
+			}
+		}
+		if (threeTeams) {
+		int crashed = e->player;
+		int crashedTeam = (crashed < 2) ? 0 : (crashed < 4) ? 1 : 2;
+		int creditTeam = -1;
+		if (e->cause == 1 && e->killer >= 0) {
+			int killerTeam = (e->killer < 2) ? 0 : (e->killer < 4) ? 1 : 2;
+			/* teammate hit should not grant respawn */
+			if (killerTeam != crashedTeam && e->killer != crashed) {
+				creditTeam = killerTeam;
+			}
+		} else {
+			/* self or wall crash: find nearest opponent trail within threshold */
+			float eye[2] = { e->x, e->y };
+			float bestDist = 1.0f; /* proximity threshold: within one unit */
+			float eps = 1e-3f;
+			int k;
+			int bestList[6]; int bestCount = 0;
+			for(k = 0; k < game->players; k++) {
+				int kTeam = (k < 2) ? 0 : (k < 4) ? 1 : 2;
+				if(k == crashed) continue;
+				if(kTeam == crashedTeam) continue; /* teammate lines should not respawn */
+				if(game->player[k].data->trail_height < TRAIL_HEIGHT) continue;
+				int t;
+				for(t = 0; t <= game->player[k].data->trailOffset; t++) {
+					segment2 *seg = game->player[k].data->trails + t;
+					float d = getDist(seg, eye);
+					if (d <= bestDist + eps) {
+						if (fabsf(d - bestDist) <= eps) {
+							/* same distance: add candidate */
+							if (bestCount < 6) bestList[bestCount++] = k;
+						} else if (d < bestDist) {
+							/* new best: reset candidate list */
+							bestDist = d;
+							bestCount = 0;
+							bestList[bestCount++] = k;
+						}
+					}
+				}
+			}
+			if (bestCount > 0) {
+				int pick = bestList[ trand() % bestCount ];
+				creditTeam = (pick < 2) ? 0 : (pick < 4) ? 1 : 2;
+			}
+		}
+		game->player[crashed].data->respawn_credit_team = creditTeam;
+		}
+	}
+
+	game->player[e->player].data->speed = SPEED_CRASHED;
+}
+
+void newTrail(Data* data) {
+	segment2 *s;
+	float x, y;
+
+	getPositionFromData(&x, &y, data);
+
+	data->trailOffset++;
+	s = data->trails + data->trailOffset;
+
+	s->vStart.v[0] = x;
+	s->vStart.v[1] = y;
+	s->vDirection.v[0] = 0;
+	s->vDirection.v[1] = 0;
+  
+}
+      
+void doTurn(GameEvent *e, int direction) {
+	Data *data = game->player[e->player].data;
+	newTrail(data);
+	data->last_dir = data->dir;
+	data->dir = (data->dir + direction) % 4;
+	data->turn_time = game2->time.current;
+}
+
+void initWalls(void) {
+	float raw[4][4] = {
+		{ 0.0f, 0.0f, 1.0f,  0.0f },
+		{ 1.0f, 0.0f, 0.0f, 1.0f },
+		{ 1.0f, 1.0f, -1.0f, 0.0f },
+		{ 0.0f, 1.0f, 0.0f, -1.0f }
+	};
+
+	float width = game2->rules.grid_size;
+	float height = game2->rules.grid_size;
+  
+	int j;
+
+	for(j = 0; j < 4; j++) {
+		walls[j].vStart.v[0] = raw[j][0] * width;
+		walls[j].vStart.v[1] = raw[j][1] * height;
+		walls[j].vDirection.v[0] = raw[j][2] * width;
+		walls[j].vDirection.v[1] = raw[j][3] * height;
+	}
+}
