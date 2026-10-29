@@ -4,6 +4,10 @@
 
 #include <png.h>
 
+#ifndef GLTRON_VERSION
+#define GLTRON_VERSION VERSION
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -92,7 +96,7 @@ static char* getNextFilename(const char *suffix, int *start_at) {
       free(path);
 
     (*start_at)++;
-    sprintf(fname, "%s-%s-%d%s", SCREENSHOT_PREFIX, VERSION, *start_at, 
+    sprintf(fname, "%s-%s-%d%s", SCREENSHOT_PREFIX, GLTRON_VERSION, *start_at,
             suffix);
     path = getPossiblePath( PATH_SNAPSHOTS, fname );
   } while ( fileExists(path));

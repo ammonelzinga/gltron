@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#05070d" />
+    <meta name="description" content="Create or join a six-player GLTron light-cycle match." />
+    <title>GL Lite Bike</title>
+  </head>
+  <body>
+    <main id="app">
+      <section id="landing" class="page-shell">
+        <header class="hero">
+          <p class="eyebrow">Zingabee Games presents</p>
+          <h1>GL <span>Lite Bike</span></h1>
+          <p class="lede">Six riders. Three teams. One glowing grid.</p>
+        </header>
+
+        <div class="action-grid">
+          <form id="create-form" class="panel">
+            <div class="panel-heading"><span class="step">01</span><h2>Create a lobby</h2></div>
+            <label>Player name<input name="playerName" maxlength="24" required autocomplete="nickname" placeholder="Grid rider" /></label>
+            <label>Lobby name<input name="lobbyName" maxlength="40" required placeholder="Friday night bikes" /></label>
+            <div class="field-row">
+              <label>Session<select name="kind" id="session-kind"><option value="game">Single match</option><option value="tournament">Tournament</option></select></label>
+              <label>Visibility<select name="visibility"><option value="public">Public</option><option value="private">Private</option></select></label>
+            </div>
+            <div class="field-row">
+              <label>Mode<select name="mode"><option value="classic">Classic</option><option value="snake">Snake</option><option value="teams">3 Teams</option><option value="team-snake">Team Snake</option></select></label>
+              <label>Optional password<input name="password" type="password" maxlength="64" autocomplete="new-password" placeholder="Leave blank for none" /></label>
+            </div>
+            <fieldset id="tournament-settings" class="tournament-settings hidden">
+              <legend>Tournament format</legend>
+              <div class="field-row triple">
+                <label>Entrants<select name="maxEntrants"><option>8</option><option selected>16</option><option>32</option><option>64</option><option>128</option></select></label>
+                <label>Riders per heat<select name="playersPerHeat"><option>2</option><option>3</option><option selected>4</option><option>5</option><option>6</option></select></label>
+                <label>Advance per heat<select name="advancePerHeat"><option>1</option><option selected>2</option><option>3</option><option>4</option><option>5</option></select></label>
+              </div>
+              <div class="field-row triple">
+                <label>Championship riders<select name="finalPlayers"><option selected>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select></label>
+                <label>Points to win<input name="pointsToWin" type="number" min="1" max="99" value="5" /></label>
+                <label>Parallel arenas<select name="maxParallel"><option selected>1</option><option>2</option><option>3</option><option>4</option></select></label>
+              </div>
+              <label>Seeding<select name="seeding"><option value="random">Random draw</option><option value="join">Join order</option><option value="manual">Manual by host</option></select></label>
+              <div class="check-grid">
+                <label class="check"><input name="hostParticipates" type="checkbox" checked /> Host competes</label>
+                <label class="check"><input name="allowSpectators" type="checkbox" checked /> Eliminated riders spectate</label>
+                <label class="check"><input name="thirdPlaceMatch" type="checkbox" /> Third-place match</label>
+              </div>
+              <p class="form-note">Odd entrant counts are balanced automatically. Seven riders in four-rider heats become groups of four and three.</p>
+            </fieldset>
+            <button class="primary" type="submit">Create lobby</button>
+          </form>
+
+          <form id="join-form" class="panel">
+            <div class="panel-heading"><span class="step">02</span><h2>Join by code</h2></div>
+            <label>Player name<input name="playerName" maxlength="24" required autocomplete="nickname" placeholder="Grid rider" /></label>
+            <label>Room code<input name="roomCode" class="room-code-input" maxlength="8" required autocomplete="off" placeholder="NEON42" /></label>
+            <label>Password<input name="password" type="password" maxlength="64" autocomplete="current-password" placeholder="Only if required" /></label>
+            <button class="secondary" type="submit">Join lobby</button>
+          </form>
+        </div>
+
+        <section class="public-section">
+          <div class="section-title"><div><p class="eyebrow">Live now</p><h2>Public lobbies</h2></div><button id="refresh-lobbies" class="quiet" type="button">Refresh</button></div>
+          <div id="public-lobbies" class="lobby-list" aria-live="polite"><p class="empty-state">Looking for open grids…</p></div>
+        </section>
+        <p id="landing-status" class="status" role="status"></p>
+      </section>
+
+      <section id="lobby" class="page-shell hidden">
+        <header class="lobby-header">
+          <div><p class="eyebrow">Lobby</p><h1 id="lobby-title">Loading…</h1></div>
+          <button id="leave-lobby" class="quiet danger" type="button">Leave</button>
+        </header>
+        <div class="lobby-layout">
+          <section class="panel room-panel">
+            <p class="eyebrow">Invite players</p>
+            <div class="invite-code"><strong id="room-code">------</strong><button id="copy-code" class="quiet" type="button">Copy</button></div>
+            <p id="invite-help" class="muted"></p>
+            <div id="player-list" class="player-list"></div>
+            <button id="start-game" class="primary hidden" type="button">Start match</button>
+            <p id="lobby-status" class="status" role="status"></p>
+          </section>
+          <aside class="panel rules-panel"><p class="eyebrow">Match</p><dl id="match-rules"></dl></aside>
+        </div>
+        <section id="tournament-dashboard" class="tournament-dashboard hidden">
+          <div class="section-title tournament-title"><div><p class="eyebrow">Competition center</p><h2 id="tournament-heading">Tournament bracket</h2></div><div class="tournament-tools"><button id="return-arena" class="quiet hidden" type="button">Return to arena</button><div id="tournament-progress" class="progress-pill"></div></div></div>
+          <div id="seeding-panel" class="panel seeding-panel hidden">
+            <div><h3>Seed the bracket</h3><p class="muted">Move riders into the order you want, or shuffle the field automatically.</p></div>
+            <button id="shuffle-seeds" class="quiet" type="button">Shuffle</button>
+            <div id="seed-list" class="seed-list"></div>
+          </div>
+          <div id="bracket" class="bracket" aria-live="polite"></div>
+          <div id="host-arenas" class="host-arenas hidden"></div>
+          <section id="spectator-panel" class="panel spectator-panel hidden"><p class="eyebrow">Spectator mode</p><h3>You are out of the running</h3><p>Follow every live heat and the updated bracket here. Select a live arena to watch.</p><div id="spectator-arenas"></div></section>
+        </section>
+      </section>
+
+      <section id="game" class="game-shell hidden">
+        <header class="game-bar"><strong>GL Lite Bike</strong><span id="connection-status">Preparing grid…</span><button id="exit-game" class="quiet" type="button">Exit</button></header>
+        <div class="game-stage">
+          <canvas id="gltron-canvas" width="1280" height="720" tabindex="0"></canvas>
+          <video id="remote-game" autoplay playsinline muted></video>
+          <div id="game-loading" class="game-loading">Loading the grid…</div>
+        </div>
+        <div class="mobile-controls"><button data-turn="left" aria-label="Turn left">↶</button><button data-turn="right" aria-label="Turn right">↷</button></div>
+        <p class="control-hint">Use <kbd>←</kbd> and <kbd>→</kbd> or the controls above to turn.</p>
+      </section>
+    </main>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

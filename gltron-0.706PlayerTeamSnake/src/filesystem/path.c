@@ -11,6 +11,13 @@
 // #include <unistd.h>
 #include <limits.h>
 
+#ifndef PREF_DIR
+#define PREF_DIR "~"
+#endif
+#ifndef SNAP_DIR
+#define SNAP_DIR "~"
+#endif
+
 #ifndef PATH_MAX
 // #warning PATH_MAX "is not defined in limits.h!"
 #define PATH_MAX 255
@@ -27,12 +34,12 @@ void initDirectories(void) {
   if(PREF_DIR[0] != '~')
     sprintf(preferences_dir, PREF_DIR);
   else
-    sprintf(preferences_dir, "%s%s", getHome(), PREF_DIR + 1);
+    sprintf(preferences_dir, "%s%s", getHome(), &PREF_DIR[1]);
 
   if(SNAP_DIR[0] != '~')
     sprintf(snapshots_dir, SNAP_DIR);
   else
-    sprintf(snapshots_dir, "%s%s", getHome(), SNAP_DIR + 1);
+    sprintf(snapshots_dir, "%s%s", getHome(), &SNAP_DIR[1]);
 
 #ifdef LOCAL_DATA
   #ifdef macintosh

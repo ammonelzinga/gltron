@@ -292,8 +292,8 @@ void drawModel(Mesh *pMesh, MeshType iType) {
 		 pMesh->pMaterials[i].diffuse);
     glMaterialfv(GL_FRONT, GL_SPECULAR,
 		 pMesh->pMaterials[i].specular);
-    glMaterialf(GL_FRONT, GL_SHININESS,
-		pMesh->pMaterials[i].shininess);
+    glMaterialfv(GL_FRONT, GL_SHININESS,
+		&pMesh->pMaterials[i].shininess);
 
     glDrawElements(primitive, iFaceSize * pMesh->pnFaces[i],
 		   GL_UNSIGNED_SHORT, pMesh->ppIndices[i]);
@@ -326,8 +326,8 @@ void drawModelExplosion(Mesh *pMesh, float fRadius) {
         pMesh->pMaterials[i].diffuse);
     glMaterialfv(GL_FRONT, GL_SPECULAR,
         pMesh->pMaterials[i].specular);
-    glMaterialf(GL_FRONT, GL_SHININESS,
-        pMesh->pMaterials[i].shininess);
+    glMaterialfv(GL_FRONT, GL_SHININESS,
+        &pMesh->pMaterials[i].shininess);
 
     for(j = 0; j < pMesh->pnFaces[i]; j++) {
 

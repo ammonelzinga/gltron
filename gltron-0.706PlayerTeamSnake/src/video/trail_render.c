@@ -19,7 +19,9 @@ void trailStatesNormal(Player *pPlayer, int texture) {
 	{ 
 		float black[] = { 0, 0, 0, 1 };
 		glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, black);
+#ifndef __EMSCRIPTEN__
 		glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
+#endif
 		glEnable(GL_COLOR_MATERIAL);
 	}
 

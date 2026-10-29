@@ -65,7 +65,7 @@ void doComputerSimple(int player, int target, AI_Distances *distances) {
 		 distances->front > distances->left) { 
 		return; /* no way out */
 	} else if(distances->left > ai_params.rlDelta[level] &&
-						abs(distances->right - distances->left) < 
+						 fabsf(distances->right - distances->left) <
 						ai_params.rlDelta[level] &&
 						distances->backleft > distances->left &&
 						ai->tdiff < ai_params.spiral[level]) {

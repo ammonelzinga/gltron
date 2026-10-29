@@ -4,7 +4,8 @@ libgame_a_SOURCES = \
 	camera.c computer.c computer_utilities.c credits.c \
 	engine.c event.c game.c globals.c gui.c \
 	init.c init_sdl.c menu.c pause.c snake.c \
-	timedemo.c switchCallbacks.c scripting_interface.c
+	timedemo.c switchCallbacks.c scripting_interface.c web_bridge.c
+
 
 AM_CFLAGS = \
 	-I$(top_srcdir)/nebu/include \

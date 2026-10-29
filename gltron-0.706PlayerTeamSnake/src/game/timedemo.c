@@ -45,7 +45,7 @@ void idleTimedemo(void) {
 		l = doMovement(1, t); /* this can generate new events */
 		if(l != NULL) {
 			for(p = l; p->next != NULL; p = p->next) {
-				if(processEvent((GameEvent*) p->data));
+				processEvent((GameEvent*) p->data);
 			}
 
 		}

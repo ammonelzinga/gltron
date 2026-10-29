@@ -25,9 +25,9 @@ static void drawWave(double radius) {
     glBegin(GL_QUAD_STRIP);
     angle = start_angle;
     for (j = 0; j <= SHOCKWAVE_SEGMENTS; j++) {
-      glVertex2d((radius + delta_radius) * sin(angle),
+      glVertex2f((float)((radius + delta_radius) * sin(angle)),
           (radius + delta_radius) * cos(angle));
-      glVertex2d(radius * sin(angle), radius * cos(angle));
+      glVertex2f((float)(radius * sin(angle)), (float)(radius * cos(angle)));
       angle += delta_angle;
     }
     glEnd();

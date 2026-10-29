@@ -7,6 +7,40 @@ Callbacks *current = 0;
 static int return_code = -1;
 static int redisplay = 0;
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+
+static void WebMainLoopIteration(void) {
+  SDL_Event event;
+  while(SDL_PollEvent(&event) && current) {
+    switch(event.type) {
+    case SDL_KEYDOWN:
+    case SDL_KEYUP:
+    case SDL_JOYAXISMOTION:
+    case SDL_JOYBUTTONDOWN:
+    case SDL_JOYBUTTONUP:
+    case SDL_MOUSEBUTTONUP:
+    case SDL_MOUSEBUTTONDOWN:
+    case SDL_MOUSEMOTION:
+      SystemHandleInput(&event);
+      break;
+    case SDL_QUIT:
+      SystemExit();
+      break;
+    default:
+      break;
+    }
+  }
+  if(!current) return;
+  if(redisplay) {
+    current->display();
+    redisplay = 0;
+  } else {
+    current->idle();
+  }
+}
+#endif
+
 void SystemExit() {
   fprintf(stderr, "[system] shutting down SDL now\n");
   SDL_Quit();
@@ -20,7 +54,13 @@ unsigned int SystemGetElapsedTime() {
 
 int SystemMainLoop() {
   SDL_Event event;
-  
+
+
+#ifdef __EMSCRIPTEN__
+	return_code = -1;
+  emscripten_set_main_loop(WebMainLoopIteration, 0, 1);
+  return return_code;
+#else
 	return_code = -1;
   while(return_code == -1) {
     while(SDL_PollEvent(&event) && current) {
@@ -52,6 +92,7 @@ int SystemMainLoop() {
 	if(current->exit)
 		(current->exit)();
 	return return_code;
+#endif
 }
   
 void SystemRegisterCallbacks(Callbacks *cb) {
