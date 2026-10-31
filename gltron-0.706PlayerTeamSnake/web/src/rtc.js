@@ -28,8 +28,12 @@ function monitor(peer, onState) {
 
 export async function hostPeer({ store, code, guest, password, salt, canvas, signalKey = guest.id, onInput, onState }) {
   const peer = new RTCPeerConnection(rtcConfiguration);
+  if(import.meta.env.DEV) canvas.webPeer=peer;
   monitor(peer, onState);
   const stream = canvas.captureStream(30);
+  const videoTrack = stream.getVideoTracks()[0];
+  canvas.webVideoTrack=videoTrack;
+  const frameTimer = setInterval(() => videoTrack?.requestFrame?.(), 1000 / 30);
   stream.getTracks().forEach(track => peer.addTrack(track, stream));
   const channel = peer.createDataChannel('controls', { ordered: false, maxRetransmits: 0 });
   let resolveConnected;
@@ -39,17 +43,27 @@ export async function hostPeer({ store, code, guest, password, salt, canvas, sig
     try { onInput(JSON.parse(event.data), guest); } catch { /* ignore malformed peer data */ }
   };
   await peer.setLocalDescription(await peer.createOffer());
+  const sender=peer.getSenders().find(sender=>sender.track?.kind==='video');
+  if(sender){
+    const parameters=sender.getParameters();
+    if(parameters.encodings?.length){
+      parameters.encodings[0].maxBitrate=6_000_000;
+      parameters.encodings[0].maxFramerate=30;
+      await sender.setParameters(parameters).catch(()=>{});
+    }
+  }
   await completeIceGathering(peer);
   await store.set(`signals/${code}/${signalKey}`, { authUid: guest.authUid, hostUid: store.uid, offer: await seal(peer.localDescription.toJSON(), password, salt) });
   const stop = store.watch(`signals/${code}/${signalKey}/answer`, async envelope => {
     if (!envelope || peer.remoteDescription) return;
     try { await peer.setRemoteDescription(await open(envelope, password, salt)); } catch (error) { onState?.('failed', error); }
   });
-  return { peer, channel, connected, close() { stop(); channel.close(); peer.close(); stream.getTracks().forEach(track => track.stop()); store.set(`signals/${code}/${signalKey}`, null).catch(() => {}); } };
+  return { peer, channel, connected, close() { clearInterval(frameTimer); stop(); channel.close(); peer.close(); stream.getTracks().forEach(track => track.stop()); store.set(`signals/${code}/${signalKey}`, null).catch(() => {}); } };
 }
 
 export async function guestPeer({ store, code, guest, password, salt, video, signalKey = guest.id, onState }) {
   const peer = new RTCPeerConnection(rtcConfiguration);
+  if(import.meta.env.DEV) video.webPeer=peer;
   monitor(peer, onState);
   let channel;
   let connectionTimer;

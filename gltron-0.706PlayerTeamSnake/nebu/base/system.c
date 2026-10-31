@@ -22,7 +22,8 @@ static void WebMainLoopIteration(void) {
     case SDL_MOUSEBUTTONUP:
     case SDL_MOUSEBUTTONDOWN:
     case SDL_MOUSEMOTION:
-      SystemHandleInput(&event);
+      /* Browser controls are routed exclusively through the web bridge.
+         SDL's saved desktop bindings otherwise control unrelated riders. */
       break;
     case SDL_QUIT:
       SystemExit();
@@ -39,6 +40,12 @@ static void WebMainLoopIteration(void) {
     current->idle();
   }
 }
+
+EMSCRIPTEN_KEEPALIVE
+void web_tick(void) { WebMainLoopIteration(); }
+
+EMSCRIPTEN_KEEPALIVE
+void web_use_worker_clock(void) { emscripten_pause_main_loop(); }
 #endif
 
 void SystemExit() {

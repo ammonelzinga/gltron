@@ -1,6 +1,63 @@
 @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap');
 
 :root { color-scheme: dark; font-family: Inter, sans-serif; background:#05070d; color:#f4f7ff; --cyan:#32f5ff; --magenta:#ff3cc7; --panel:rgba(13,19,34,.82); --line:rgba(78,226,255,.18); }
+
+/* Original GLtron menu palette: black, violet grid, gold and electric blue. */
+#landing { width:min(1180px,calc(100% - 40px)); padding-top:36px; }
+#landing .hero { position:relative; max-width:none; min-height:350px; padding:64px 0 40px; margin-bottom:12px; overflow:hidden; }
+#landing .hero::after { content:""; position:absolute; inset:0; background:linear-gradient(90deg,#05050b 3%,rgba(5,5,11,.92) 28%,transparent 67%); pointer-events:none; z-index:0; }
+#landing .hero>*:not(img) { position:relative; z-index:1; }
+#landing .hero-bikes { position:absolute; right:0; top:0; width:540px; height:390px; object-fit:cover; object-position:50% 60%; opacity:.95; }
+#landing .hero h1 { font-size:clamp(70px,10vw,124px); letter-spacing:-.055em; color:#d5efff; text-shadow:0 2px 0 #1574b1,0 0 32px #236bb566; }
+#landing .hero h1 span { color:#ffd16b; -webkit-text-stroke:0; text-shadow:0 3px 0 #7f460d,0 0 30px #e9ab4133; }
+#landing .lede { font:600 clamp(24px,4vw,40px) 'Chakra Petch',monospace; color:#fff; margin:26px 0 8px; text-transform:uppercase; letter-spacing:.12em; }
+.hero-caption { color:#b1adc4; max-width:360px; line-height:1.7; margin:0; }
+#landing .eyebrow { color:#ffcf71; }
+#landing .panel { background:linear-gradient(140deg,rgba(26,22,43,.97),rgba(7,8,15,.98)); border-color:#776b973f; border-radius:0; box-shadow:inset 3px 0 #7861a02a,0 16px 40px #0005; backdrop-filter:none; }
+#landing .panel-heading { border-bottom:1px solid #75678040; padding-bottom:18px; }
+#landing .step { color:#ffce6b; border-color:#ffce6b55; }
+#landing button.primary { background:linear-gradient(115deg,#ffe49a,#efb847); color:#201505; border:1px solid #ffe6a5; box-shadow:0 0 24px #e7b34118; }
+#landing button.secondary { color:#bdefff; border-color:#5dbfdd80; background:#152b3d; }
+#landing input:focus,#landing select:focus { border-color:#ffcd6b; outline-color:#ffcd6b44; }
+.quick-panel { position:relative; margin-bottom:28px; display:grid; grid-template-columns:1fr auto; gap:10px 24px; border-top:2px solid #e9bc65 !important; }
+.quick-panel h2 { font-size:28px; }
+.quick-panel .muted { margin-bottom:0; }
+.quick-fields { grid-column:1/-1; display:grid; grid-template-columns:1.3fr .7fr 1fr 1fr 1fr; gap:14px; }
+.quick-preference { min-width:0; }
+.quick-preference>label:first-child { margin-bottom:7px; }
+.quick-preference .requirement { display:flex;align-items:flex-start;gap:6px;font-size:11px;line-height:1.4;margin-top:0;color:#c4bed3; }
+.requirement input { width:14px;height:14px;min-height:0;padding:0;flex-shrink:0;margin:0;accent-color:#ffd16b; }
+#cancel-quick { grid-column:2;justify-self:end; }
+@media(max-width:760px){#cancel-quick{grid-column:1;justify-self:stretch;order:4}.quick-fields>label:first-child{grid-column:1/-1}.quick-fields .quick-preference{grid-column:auto}}
+.quick-button { grid-column:2; grid-row:1; align-self:center; min-width:230px; }
+#quick-status { grid-column:1/-1; margin:0; }
+.room-config { display:flex; flex-wrap:wrap; gap:7px; margin-top:12px; }
+.room-config span { font-size:12px; color:#c6c1d5; border:1px solid #776b9740; background:#14111e; padding:5px 8px; }
+#landing .lobby-card { align-items:center; background:#0e0c16; border-color:#776b9745; padding:22px; }
+#landing .lobby-card h3 { font:600 23px 'Chakra Petch',monospace; text-transform:uppercase; margin:8px 0; }
+#landing .lobby-card .meta { white-space:nowrap; color:#ffd785; }
+#landing .public-section { margin:28px 0; }
+#landing .action-grid { align-items:start; }
+#landing .check input { accent-color:#ffd16b; }
+#landing .lobby-card .meta { display:block; }
+#rematch-panel { background:#090c17f5;border-color:#ffd16b;box-shadow:0 0 0 100vmax #0007; }
+#rematch-panel button:disabled { opacity:1;color:#b9d9cd;background:#1c3b32;border:1px solid #3b6b56;cursor:default; }
+.rematch-panel { position:absolute; z-index:5; top:50%; left:50%; transform:translate(-50%,-50%); width:min(460px,calc(100% - 28px)); text-align:center; background:#090c17f5; border-color:#ffd16b; box-shadow:0 0 0 100vmax #0007; }
+.rematch-panel h2 { color:#ffd16b; font-size:30px; }
+.rematch-panel button { width:100%; margin-top:12px; }
+@media(max-width:760px){
+  #landing { width:calc(100% - 24px);padding-top:10px; }
+  #landing .hero { min-height:305px;padding-top:50px; }
+  #landing .hero-bikes { right:-125px;width:420px;height:320px;opacity:.65; }
+  #landing .hero-caption { max-width:240px; }
+  .quick-panel { grid-template-columns:1fr;gap:8px; }
+  .quick-button { grid-column:1;grid-row:auto;min-width:0;order:3; }
+  .quick-fields { grid-template-columns:1fr 1fr;gap:0 12px; }
+  .quick-fields label:first-child { grid-column:1/-1; }
+  #quick-status { order:4; }
+  #landing .lobby-card { grid-template-columns:1fr auto;gap:12px; }
+  #landing .lobby-card>div { grid-column:1/-1; }
+}
 * { box-sizing:border-box; }
 body { margin:0; min-height:100vh; background:radial-gradient(circle at 18% 0%,rgba(40,107,200,.22),transparent 37rem),radial-gradient(circle at 87% 35%,rgba(216,38,164,.12),transparent 34rem),#05070d; }
 body::before { content:""; position:fixed; inset:0; pointer-events:none; opacity:.14; background-image:linear-gradient(rgba(50,245,255,.16) 1px,transparent 1px),linear-gradient(90deg,rgba(50,245,255,.16) 1px,transparent 1px); background-size:48px 48px; mask-image:linear-gradient(to bottom,black,transparent 75%); }
@@ -84,11 +141,25 @@ dl { margin:18px 0 0; } dt { color:#7f8ba0; font-size:12px; text-transform:upper
 .arena-buttons { display:flex; gap:8px; flex-wrap:wrap; margin-top:16px; }
 .host-arenas { display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:16px; margin-top:18px; }
 .arena-view { border:1px solid var(--line); background:#020307; }.arena-view header { display:flex; justify-content:space-between; padding:10px 12px; color:#aeb9cd; font:600 12px 'Chakra Petch'; text-transform:uppercase; }.arena-view canvas { display:block; width:100%; aspect-ratio:16/9; background:#000; }
-.game-shell { min-height:100vh; display:grid; grid-template-rows:auto 1fr auto auto; background:#020307; }
-.game-bar { padding:12px 18px; border-bottom:1px solid var(--line); color:#aeb9cd; }.game-bar strong { color:var(--cyan); font-family:'Chakra Petch'; text-transform:uppercase; }
+.game-shell { height:100dvh; display:grid; grid-template-rows:auto minmax(0,1fr) auto auto; background:#020307; overflow:hidden; }
+.game-bar { padding:12px 18px; border-bottom:1px solid var(--line); color:#aeb9cd; display:flex; align-items:center; justify-content:space-between; gap:16px; }.game-bar strong { color:var(--cyan); font-family:'Chakra Petch'; text-transform:uppercase; }.game-bar>div{display:flex;gap:8px}
 .game-stage { position:relative; display:grid; place-items:center; min-height:0; overflow:hidden; }
-#gltron-canvas,#remote-game { width:min(100%,1280px); max-height:calc(100vh - 150px); aspect-ratio:16/9; object-fit:contain; background:#000; }
-#remote-game:empty { display:none; }.game-loading { position:absolute; font:600 15px 'Chakra Petch'; color:var(--cyan); letter-spacing:.12em; text-transform:uppercase; }
+#player-view,#remote-game { position:absolute; inset:0; width:100%; height:100%; max-width:100vw; max-height:100%; object-fit:contain; background:#000; }
+.engine-canvas { position:fixed; left:-10000px; top:0; width:800px; height:600px; pointer-events:none; }
+.stream-canvas { position:fixed; left:-10000px; top:0; width:480px; height:270px; pointer-events:none; }
+.bot-controls { display:flex; gap:8px; margin-top:12px; }
+.scoreboard { position:absolute; left:12px; top:12px; max-width:calc(100% - 24px); z-index:2; display:flex; flex-wrap:wrap; gap:8px; padding:8px; background:rgba(0,0,0,.85); border:1px solid #566480; }
+.scoreboard span { padding:4px 9px; color:#fff; font:700 16px 'Chakra Petch'; }
+.control-settings { margin-top:24px; }
+.control-settings summary { cursor:pointer; color:var(--cyan); font:700 14px 'Chakra Petch'; text-transform:uppercase; }
+.control-config { display:grid; gap:12px; margin-top:16px; }
+.control-player { display:grid; grid-template-columns:90px repeat(5,minmax(90px,1fr)); gap:8px; align-items:end; }
+.control-player strong { color:#dce8fa; font:700 13px 'Chakra Petch'; }
+.control-player label { font-size:10px; }
+.control-player input { min-width:0; text-align:center; cursor:pointer; }
+@media (max-width:900px) { .control-player { grid-template-columns:1fr 1fr; }.control-player strong { grid-column:1/-1; } }
+.game-loading { position:absolute; font:600 15px 'Chakra Petch'; color:var(--cyan); letter-spacing:.12em; text-transform:uppercase; }
 .mobile-controls { display:flex; justify-content:center; gap:18px; padding:12px; }.mobile-controls button { width:88px; height:58px; border:1px solid var(--cyan); color:var(--cyan); background:#07101a; font-size:30px; }
 .control-hint { text-align:center; color:#748096; font-size:12px; margin:0 0 12px; } kbd { border:1px solid #475169; padding:2px 6px; }
+@media (pointer:fine) and (min-width:900px) { .mobile-controls { display:none; } }
 @media(max-width:760px){.page-shell{padding-top:34px}.action-grid,.lobby-layout{grid-template-columns:1fr}.rules-panel{order:-1}.field-row,.field-row.triple,.check-grid{grid-template-columns:1fr}.lobby-card{grid-template-columns:1fr auto}.lobby-card .meta{display:none}.bracket-round{flex-basis:280px}.tournament-title{align-items:flex-start}.tournament-tools{align-items:flex-end;flex-direction:column}.player{align-items:flex-start}.player span{text-align:right}}

@@ -4,27 +4,56 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#05070d" />
-    <meta name="description" content="Create or join a six-player GLTron light-cycle match." />
-    <title>GL Lite Bike</title>
+    <meta name="description" content="Create or join a six-player glTrof light-cycle match." />
+    <title>glTrof</title>
   </head>
   <body>
     <main id="app">
       <section id="landing" class="page-shell">
         <header class="hero">
-          <p class="eyebrow">Zingabee Games presents</p>
-          <h1>GL <span>Lite Bike</span></h1>
-          <p class="lede">Six riders. Three teams. One glowing grid.</p>
+          <p class="eyebrow">Zingabee Games / Light cycle arena</p>
+          <h1>gl<span>Trof</span></h1>
+          <p class="lede">Enter the grid.</p>
+          <p class="hero-caption">The original light-cycle game. Six riders. Your browser.</p>
+          <img class="hero-bikes" src="/art/menu-bikes.png" alt="Gold and blue GLtron light cycles" />
         </header>
+
+        <form id="quick-form" class="panel quick-panel">
+          <div><p class="eyebrow">No room code needed</p><h2>Find your next race</h2><p class="muted">Pool with other riders. After 10 seconds, find the closest game. Lock any setting you need.</p></div>
+          <div class="quick-fields">
+            <label>Player name<input name="playerName" maxlength="24" required autocomplete="nickname" placeholder="Grid rider" /></label>
+            <div class="quick-preference"><label>Local riders<select name="localPlayers"><option selected>1</option><option>2</option><option>3</option><option>4</option></select></label><label class="requirement"><input type="checkbox" name="required-localPlayers" checked disabled /> Absolutely required (local riders)</label></div>
+            <div class="quick-preference"><label>Preferred grid<select name="gridSize"><option value="">Any size</option><option value="240">Small</option><option value="480">Standard</option><option value="720" selected>Large</option><option value="960">Vast</option></select></label><label class="requirement"><input type="checkbox" name="required-gridSize"  /> Absolutely required</label></div>
+            <div class="quick-preference"><label>Game mode<select name="mode"><option value="">Any mode</option><option value="classic">Classic</option><option value="snake">Snake</option><option value="teams">3 Teams</option><option value="team-snake">Team Snake</option></select></label><label class="requirement"><input type="checkbox" name="required-mode"  /> Absolutely required</label></div>
+            <div class="quick-preference"><label>Speed<select name="speed"><option value="">Any speed</option><option value="6">Cruise</option><option value="8.5">Classic</option><option value="11">Fast</option><option value="14">Extreme</option></select></label><label class="requirement"><input type="checkbox" name="required-speed"  /> Absolutely required</label></div>
+          </div>
+          <input name="password" type="hidden" value="" />
+          <button class="primary quick-button" type="submit">Join quick match</button><button id="cancel-quick" class="quiet hidden" type="button">Cancel search</button>
+          <p id="quick-status" class="status" role="status"></p>
+        </form>
+
+        <section class="public-section">
+          <div class="section-title"><div><p class="eyebrow">Live now</p><h2>Public lobbies</h2></div><button id="refresh-lobbies" class="quiet" type="button">Refresh</button></div>
+          <div id="public-lobbies" class="lobby-list" aria-live="polite"><p class="empty-state">Looking for open grids…</p></div>
+        </section>
 
         <div class="action-grid">
           <form id="create-form" class="panel">
             <div class="panel-heading"><span class="step">01</span><h2>Create a lobby</h2></div>
             <label>Player name<input name="playerName" maxlength="24" required autocomplete="nickname" placeholder="Grid rider" /></label>
+            <label>Players on this browser<select name="localPlayers"><option selected>1</option><option>2</option><option>3</option><option>4</option></select></label>
             <label>Lobby name<input name="lobbyName" maxlength="40" required placeholder="Friday night bikes" /></label>
             <div class="field-row">
               <label>Session<select name="kind" id="session-kind"><option value="game">Single match</option><option value="tournament">Tournament</option></select></label>
               <label>Visibility<select name="visibility"><option value="public">Public</option><option value="private">Private</option></select></label>
             </div>
+            <div class="field-row triple">
+              <label>Grid size<select name="gridSize"><option value="240">Small</option><option value="480">Standard</option><option value="720" selected>Large</option><option value="960">Vast</option></select></label>
+              <label>Speed<select name="speed"><option value="6">Cruise</option><option value="8.5" selected>Classic</option><option value="11">Fast</option><option value="14">Extreme</option></select></label>
+              <label>Points to win<input name="matchPoints" type="number" min="1" max="99" value="5" /></label>
+            </div>
+            <label>Bot difficulty<select name="botDifficulty"><option value="0">Dumb</option><option value="1">Fair</option><option value="2" selected>Smart</option><option value="3">Insane</option></select></label>
+            <label class="check"><input name="clearTrails" type="checkbox" checked /> Clear crashed riders’ trails immediately</label>
             <div class="field-row">
               <label>Mode<select name="mode"><option value="classic">Classic</option><option value="snake">Snake</option><option value="teams">3 Teams</option><option value="team-snake">Team Snake</option></select></label>
               <label>Optional password<input name="password" type="password" maxlength="64" autocomplete="new-password" placeholder="Leave blank for none" /></label>
@@ -55,16 +84,20 @@
           <form id="join-form" class="panel">
             <div class="panel-heading"><span class="step">02</span><h2>Join by code</h2></div>
             <label>Player name<input name="playerName" maxlength="24" required autocomplete="nickname" placeholder="Grid rider" /></label>
+            <label>Players on this browser<select name="localPlayers"><option selected>1</option><option>2</option><option>3</option><option>4</option></select></label>
             <label>Room code<input name="roomCode" class="room-code-input" maxlength="8" required autocomplete="off" placeholder="NEON42" /></label>
             <label>Password<input name="password" type="password" maxlength="64" autocomplete="current-password" placeholder="Only if required" /></label>
             <button class="secondary" type="submit">Join lobby</button>
           </form>
         </div>
 
-        <section class="public-section">
-          <div class="section-title"><div><p class="eyebrow">Live now</p><h2>Public lobbies</h2></div><button id="refresh-lobbies" class="quiet" type="button">Refresh</button></div>
-          <div id="public-lobbies" class="lobby-list" aria-live="polite"><p class="empty-state">Looking for open grids…</p></div>
-        </section>
+        <details class="panel control-settings">
+          <summary>Local control settings</summary>
+          <p class="muted">Each browser starts with Player 1: ←/→ turn, ↑ boost, comma/period glance. Local Player 2: A/D turn, W boost, Q/E glance. Local Player 3: J/L turn, I boost, U/O glance. Local Player 4 uses the numpad. Select a key field to change it.</p>
+          <div id="control-config" class="control-config"></div>
+        </details>
+
+
         <p id="landing-status" class="status" role="status"></p>
       </section>
 
@@ -79,6 +112,7 @@
             <div class="invite-code"><strong id="room-code">------</strong><button id="copy-code" class="quiet" type="button">Copy</button></div>
             <p id="invite-help" class="muted"></p>
             <div id="player-list" class="player-list"></div>
+            <div id="bot-controls" class="bot-controls hidden"><button id="remove-bot" class="quiet" type="button">Remove bot</button><button id="add-bot" class="quiet" type="button">Add bot</button></div>
             <button id="start-game" class="primary hidden" type="button">Start match</button>
             <p id="lobby-status" class="status" role="status"></p>
           </section>
@@ -98,14 +132,23 @@
       </section>
 
       <section id="game" class="game-shell hidden">
-        <header class="game-bar"><strong>GL Lite Bike</strong><span id="connection-status">Preparing grid…</span><button id="exit-game" class="quiet" type="button">Exit</button></header>
+        <header class="game-bar"><strong>glTrof</strong><span id="connection-status">Preparing grid…</span><div><button id="fullscreen-game" class="quiet" type="button">Fullscreen</button><button id="exit-game" class="quiet" type="button">Exit</button></div></header>
         <div class="game-stage">
-          <canvas id="gltron-canvas" width="1280" height="720" tabindex="0"></canvas>
+          <canvas id="gltron-canvas" class="engine-canvas" width="1280" height="720" tabindex="0"></canvas>
+          <canvas id="player-view" width="1280" height="720" tabindex="0"></canvas>
           <video id="remote-game" autoplay playsinline muted></video>
           <div id="game-loading" class="game-loading">Loading the grid…</div>
+          <div id="scoreboard" class="scoreboard"></div>
+          <section id="rematch-panel" class="rematch-panel panel hidden" aria-live="polite">
+            <p class="eyebrow">Match complete</p><h2 id="match-result"></h2>
+            <p id="rematch-count" class="muted"></p>
+            <button id="play-again" class="secondary" type="button">Play again</button>
+            <button id="start-rematch" class="primary hidden" type="button">Start rematch</button>
+            <p id="rematch-status" class="status" role="status"></p>
+          </section>
         </div>
-        <div class="mobile-controls"><button data-turn="left" aria-label="Turn left">↶</button><button data-turn="right" aria-label="Turn right">↷</button></div>
-        <p class="control-hint">Use <kbd>←</kbd> and <kbd>→</kbd> or the controls above to turn.</p>
+        <div class="mobile-controls"><button data-action="4" aria-label="Glance left">◁</button><button data-action="1" aria-label="Turn left">↶</button><button data-action="3" aria-label="Boost">BOOST</button><button data-action="2" aria-label="Turn right">↷</button><button data-action="5" aria-label="Glance right">▷</button></div>
+        <p class="control-hint"><kbd>←</kbd>/<kbd>→</kbd> turn · <kbd>↑</kbd> boost · <kbd>,</kbd>/<kbd>.</kbd> glance · <kbd>C</kbd> mouse camera. Spectating: arrows switch riders/arenas.</p>
       </section>
     </main>
     <script type="module" src="/src/main.js"></script>

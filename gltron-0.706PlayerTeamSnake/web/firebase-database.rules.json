@@ -3,37 +3,68 @@
     "rooms": {
       "$room": {
         ".read": "auth != null",
-        ".write": "(!data.exists() && newData.child('meta/hostUid').val() == auth.uid) || (data.exists() && data.child('meta/hostUid').val() == auth.uid)",
-        ".validate": "newData.val() == null || (newData.hasChildren(['meta','players']) && newData.child('meta/code').val() == $room && newData.child('meta/createdAt').isNumber() && newData.child('meta/hostUid').isString())",
+        ".write": "auth != null && ((!data.exists() && newData.child('meta/hostUid').val() == auth.uid) || data.child('authority/uid').val() == auth.uid)",
+        ".validate": "newData.val() == null || (newData.hasChildren(['meta']) && newData.child('meta/code').val() == $room && newData.child('meta/createdAt').isNumber() && newData.child('meta/hostUid').isString())",
         "players": {
-          ".write": "auth != null",
-          ".validate": "newData.numChildren() <= (newData.parent().child('meta/kind').val() == 'tournament' ? newData.parent().child('tournament/config/maxEntrants').val() + 65 : 6)",
           "$player": {
-            ".validate": "(newData.val() == null && (data.child('authUid').val() == auth.uid || newData.parent().parent().child('meta/hostUid').val() == auth.uid)) || (newData.hasChildren(['authUid','name','slot','role']) && (newData.child('authUid').val() == auth.uid || newData.parent().parent().child('meta/hostUid').val() == auth.uid))"
+            ".validate": "newData.hasChildren(['authUid','name','slot','role']) && newData.child('name').isString() && newData.child('name').val().length <= 32 && newData.child('slot').isNumber() && (data.child('authUid').val() == newData.child('authUid').val() || !data.exists() || newData.parent().parent().child('authority/uid').val() == auth.uid) && (newData.parent().parent().child('authority/uid').val() == auth.uid || (root.child('rooms').child($room).child('slots').child(newData.child('slot').val() + '').child('uid').val() == auth.uid && root.child('rooms').child($room).child('slots').child(newData.child('slot').val() + '').child('playerId').val() == $player))",
+            ".write": "auth != null && (data.child('authUid').val() == auth.uid || (!data.exists() && newData.child('authUid').val() == auth.uid && root.child('rooms').child($room).child('slots').child(newData.child('slot').val() + '').child('playerId').val() == $player && root.child('rooms').child($room).child('slots').child(newData.child('slot').val() + '').child('uid').val() == auth.uid))"
           }
         },
         "meta": {
-          ".write": "data.parent().child('meta/hostUid').val() == auth.uid"
+          ".write": "data.parent().child('authority/uid').val() == auth.uid"
         },
         "tournament": {
-          ".write": "data.parent().child('meta/hostUid').val() == auth.uid"
+          ".write": "data.parent().child('authority/uid').val() == auth.uid"
         },
         "watchRequests": {
           "$player": {
-            ".write": "auth != null && (data.parent().parent().child('players').child($player).child('authUid').val() == auth.uid || data.parent().parent().child('meta/hostUid').val() == auth.uid)",
+            ".write": "auth != null && (data.parent().parent().child('players').child($player).child('authUid').val() == auth.uid || data.parent().parent().child('authority/uid').val() == auth.uid)",
             ".validate": "newData.val() == null || newData.isString()"
           }
+        },
+        "rematchVotes": {
+          "$player": {
+            ".write": "auth != null && root.child('rooms').child($room).child('meta/kind').val() == 'game' && root.child('rooms').child($room).child('match/status').val() == 'finished' && (root.child('rooms').child($room).child('players').child($player).child('authUid').val() == auth.uid || root.child('rooms').child($room).child('authority/uid').val() == auth.uid)",
+            ".validate": "newData.val() == null || newData.val() == true"
+          }
+        },
+        "authority": {
+          ".write": "auth != null && (data.child('uid').val() == auth.uid || (data.child('leaseUntil').val() < now && newData.child('uid').val() == auth.uid && root.child('rooms').child($room).child('players').child(newData.child('playerId').val()).child('authUid').val() == auth.uid && newData.child('term').val() == data.child('term').val() + 1))",
+          ".validate": "newData.hasChildren(['revision','term','uid','browserId','playerId','leaseUntil']) && newData.child('leaseUntil').isNumber() && newData.child('leaseUntil').val() <= now + 10000 && newData.child('term').isNumber() && newData.child('revision').isNumber() && newData.parent().child('players').child(newData.child('playerId').val()).child('authUid').val() == newData.child('uid').val()"
+        },
+        "presence": {
+          "$browser": {
+            ".write": "auth != null && (data.child('uid').val() == auth.uid || (newData.child('uid').val() == auth.uid && root.child('rooms').child($room).child('players').child(newData.child('playerId').val()).child('authUid').val() == auth.uid))",
+            ".validate": "newData.val() == null || (newData.hasChildren(['uid','playerId','seenAt']) && newData.child('seenAt').isNumber())"
+          }
+        },
+        "slots": {
+          "$slot": {
+            ".write": "auth != null && ((!data.exists() && newData.child('uid').val() == auth.uid) || (data.child('uid').val() == auth.uid && !newData.exists()))",
+            ".validate": "newData.hasChildren(['uid','playerId','slot']) && newData.child('slot').isNumber() && newData.child('slot').val() >= 0 && $slot == newData.child('slot').val() + '' && newData.child('slot').val() < (root.child('rooms').child($room).child('meta/kind').val() == 'tournament' ? root.child('rooms').child($room).child('tournament/config/maxEntrants').val() + 65 : 6)"
+          }
         }
-      }
+      },
+      ".indexOn": [
+        "meta/public"
+      ],
+      ".read": "auth != null && query.orderByChild == 'meta/public' && query.equalTo == true"
     },
     "signals": {
       "$room": {
         "$signal": {
-          ".read": "auth != null && (data.child('authUid').val() == auth.uid || data.child('hostUid').val() == auth.uid)",
-          ".write": "auth != null && ((data.exists() && (data.child('authUid').val() == auth.uid || data.child('hostUid').val() == auth.uid)) || (!data.exists() && root.child('rooms').child($room).child('meta/hostUid').val() == auth.uid && newData.child('hostUid').val() == auth.uid && newData.child('authUid').isString()))",
+          ".read": "auth != null && (!data.exists() || data.child('authUid').val() == auth.uid || data.child('hostUid').val() == auth.uid)",
+          ".write": "auth != null && ((data.exists() && (data.child('authUid').val() == auth.uid || data.child('hostUid').val() == auth.uid)) || (!data.exists() && newData.child('kind').val() == 'mesh' && newData.child('authUid').val() == auth.uid && root.child('rooms').child($room).child('players').child(newData.child('aId').val()).child('authUid').val() == auth.uid && root.child('rooms').child($room).child('players').child(newData.child('bId').val()).child('authUid').val() == newData.child('hostUid').val()))",
           ".validate": "newData.val() == null || newData.hasChildren(['authUid','hostUid','offer'])"
-        }
+        },
+        ".write": "auth != null && root.child('rooms').child($room).child('authority/uid').val() == auth.uid && newData.val() == null"
       }
+    },
+    "quickQueue": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      ".validate": "newData.child('revision').isNumber()"
     }
   }
 }

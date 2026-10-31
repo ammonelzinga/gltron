@@ -43,6 +43,10 @@ void loadTexture(const char *filename, int format) {
     if(tex->channels == 3) format = GL_RGB;
     if(tex->channels == 4) format = GL_RGBA;
   }
+#ifdef __EMSCRIPTEN__
+  /* WebGL requires unsized internal formats matching the supplied pixels. */
+  format = internal;
+#endif
   /* TODO: build mipmaps the proper way, box filters suck */
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 	

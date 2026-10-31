@@ -70,8 +70,8 @@ FontTex *ftxLoadFont(const char *filename) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     /* glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); */
     /* glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); */
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   }
 
   file_close(file);
@@ -188,12 +188,24 @@ w);
     /*     bound, cx, cy, cw); */
 
     glBegin(GL_QUADS);
+#ifdef __EMSCRIPTEN__
+    glColor4f(1,1,1,1);
+#endif
     glTexCoord2f(cx, 1 - cy - cw);
     glVertex2f(i, 0);
+#ifdef __EMSCRIPTEN__
+    glColor4f(1,1,1,1);
+#endif
     glTexCoord2f(cx + cw, 1 - cy - cw);
     glVertex2f(i + 1, 0);
+#ifdef __EMSCRIPTEN__
+    glColor4f(1,1,1,1);
+#endif
     glTexCoord2f(cx + cw, 1 - cy);
     glVertex2f(i + 1, 1);
+#ifdef __EMSCRIPTEN__
+    glColor4f(1,1,1,1);
+#endif
     glTexCoord2f(cx, 1 - cy);
     glVertex2f(i, 1);
     glEnd();

@@ -34,6 +34,13 @@ void storeColor(TrailMesh *pMesh, int offset, PlayerVisual *pV, int type) {
 		break;
 	}
 	float2ubyte(pMesh->pColors + 4 * offset, color);
+#ifdef __EMSCRIPTEN__
+  if(type == COLOR_TRAIL || type == COLOR_CYCLE) {
+    memcpy(color,pV->pColorDiffuse,3*sizeof(float));
+    color[3]=1;
+  }
+  float2ubyte(pMesh->pColors + 4 * offset, color);
+#endif
 	float2ubyte(pMesh->pColors + 4 * (offset + 1), color);
 }
 		

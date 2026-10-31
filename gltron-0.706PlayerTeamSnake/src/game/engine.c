@@ -196,6 +196,10 @@ void resetScores(void) {
 
 void doCrashPlayer(GameEvent *e) {
 	int j;
+#ifdef __EMSCRIPTEN__
+  /* Remove both rendering and collision geometry as soon as the crash resolves. */
+  if (game2->rules.eraseCrashed) game->player[e->player].data->trail_height=0;
+#endif
 
 	Audio_CrashPlayer(e->player);
 	Audio_StopEngine(e->player);

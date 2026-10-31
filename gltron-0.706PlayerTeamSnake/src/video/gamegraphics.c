@@ -41,6 +41,10 @@ void drawGame(void) {
 
   for(i = 0; i < vp_max[gViewportType]; i++) {
 		Player *p = game->player + viewport_content[i];
+#ifdef __EMSCRIPTEN__
+    extern int web_camera_target(int viewer);
+    p=game->player+web_camera_target(viewport_content[i]);
+#endif
 		PlayerVisual *pV = gPlayerVisuals + viewport_content[i];
 		Visual *d = & pV->display;
 	
@@ -416,11 +420,11 @@ void drawCam(Player *p, PlayerVisual* pV) {
 
 	{
 		TrailMesh mesh;
-		mesh.pVertices = (vec3*) malloc(1000 * sizeof(vec3));
-		mesh.pNormals = (vec3*) malloc(1000 * sizeof(vec3));
-		mesh.pColors = (unsigned char*) malloc(1000 * 4 * sizeof(float));
-		mesh.pTexCoords = (vec2*) malloc(1000 * sizeof(vec2));
-		mesh.pIndices = (unsigned short*) malloc(1000 * 2);
+		mesh.pVertices = (vec3*) malloc((MAX_TRAIL*4+32) * sizeof(vec3));
+		mesh.pNormals = (vec3*) malloc((MAX_TRAIL*4+32) * sizeof(vec3));
+		mesh.pColors = (unsigned char*) malloc((MAX_TRAIL*4+32) * 4);
+		mesh.pTexCoords = (vec2*) malloc((MAX_TRAIL*4+32) * sizeof(vec2));
+		mesh.pIndices = (unsigned short*) malloc((MAX_TRAIL*6+72) * sizeof(unsigned short));
 
 		for(i = 0; i < game->players; i++) {
 			if (game->player[i].data->trail_height > 0 ) {

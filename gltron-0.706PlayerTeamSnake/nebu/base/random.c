@@ -12,6 +12,10 @@
 /* The seed of the generator, hopefully set by the user before rand is 
    called */
 static int seed = 42;
+#ifdef __EMSCRIPTEN__
+int web_random_get(void) { return seed; }
+void web_random_set(int value) { if(value>0 && value<PERIOD)seed=value; }
+#endif
 
 /* Seeds the random number generator with the seed s */
 void tsrand(unsigned int s)
