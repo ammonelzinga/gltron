@@ -1,3 +1,4 @@
+import {openHost,openPreferences,openAdvanced,openJoinPassword} from './landing-helpers.js';
 import {test,expect} from '@playwright/test';
 
 for (const [splitBrowser,counts] of [[3,1,1,1],[1,3,1,1],[2,2,1,1],[4,1,1]].entries()) {
@@ -8,9 +9,9 @@ for (const [splitBrowser,counts] of [[3,1,1,1],[1,3,1,1],[2,2,1,1],[4,1,1]].entr
     pages.forEach((page,index)=>page.on('pageerror',error=>{errors.push(`${index}: ${error.message}`);console.log('Browser error',index,error.message);}));
     const host=pages[0];
     await host.goto('/');
-    await host.locator('#create-form [name=playerName]').fill('Host');
-    await host.locator('#create-form [name=lobbyName]').fill('Six-rider visual check');
-    await host.locator('#create-form [name=localPlayers]').selectOption(String(counts[0]));
+    await host.locator('#player-name').fill('Host');
+    await openHost(host);await host.locator('#create-form [name=lobbyName]').fill('Six-rider visual check');
+    await host.locator('#local-players').selectOption(String(counts[0]));
     await host.locator('#create-form [name=gridSize]').selectOption('960');
     await host.locator('#create-form [name=speed]').selectOption('6');
     await host.getByRole('button',{name:'Create lobby'}).click();
@@ -19,8 +20,8 @@ for (const [splitBrowser,counts] of [[3,1,1,1],[1,3,1,1],[2,2,1,1],[4,1,1]].entr
     for(let index=1;index<pages.length;index++){
       const page=pages[index];
       await page.goto(`/?room=${code}`);
-      await page.locator('#join-form [name=playerName]').fill(`Browser ${index+1}`);
-      await page.locator('#join-form [name=localPlayers]').selectOption(String(counts[index]));
+      await page.locator('#player-name').fill(`Browser ${index+1}`);
+      await page.locator('#local-players').selectOption(String(counts[index]));
       await page.getByRole('button',{name:'Join lobby'}).click();
       await expect(page.locator('#lobby')).toBeVisible();
     }

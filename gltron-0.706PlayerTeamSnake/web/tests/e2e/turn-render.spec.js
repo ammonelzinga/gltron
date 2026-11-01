@@ -1,3 +1,4 @@
+import {openHost,openPreferences,openAdvanced,openJoinPassword} from './landing-helpers.js';
 import {test,expect} from '@playwright/test';
 
 for(const locals of [1,2])test(`turns, boost and glance preserve ${locals}-local host and guest views`,async({context},testInfo)=>{
@@ -15,17 +16,17 @@ for(const locals of [1,2])test(`turns, boost and glance preserve ${locals}-local
     });
   },{index,locals});
   await host.goto('/');
-  await host.locator('#create-form [name=playerName]').fill('Turn Host');
-  await host.locator('#create-form [name=lobbyName]').fill('Arrow picture check');
-  await host.locator('#create-form [name=localPlayers]').selectOption(String(locals));
+  await host.locator('#player-name').fill('Turn Host');
+  await openHost(host);await host.locator('#create-form [name=lobbyName]').fill('Arrow picture check');
+  await host.locator('#local-players').selectOption(String(locals));
   await host.locator('#create-form [name=gridSize]').selectOption('960');
   await host.locator('#create-form [name=speed]').selectOption('6');
   await host.getByRole('button',{name:'Create lobby'}).click();
   await expect(host.locator('#lobby')).toBeVisible();
   const code=await host.locator('#room-code').textContent();
   await guest.goto(`/?room=${code}`);
-  await guest.locator('#join-form [name=playerName]').fill('Turn Guest');
-  await guest.locator('#join-form [name=localPlayers]').selectOption(String(locals));
+  await guest.locator('#player-name').fill('Turn Guest');
+  await guest.locator('#local-players').selectOption(String(locals));
   await guest.getByRole('button',{name:'Join lobby'}).click();
   await expect(host.locator('#player-list .player')).toHaveCount(locals*2);
   await host.getByRole('button',{name:'Start match'}).click();

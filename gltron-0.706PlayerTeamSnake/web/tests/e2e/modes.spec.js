@@ -1,13 +1,14 @@
+import {openHost,openPreferences,openAdvanced,openJoinPassword} from './landing-helpers.js';
 import {test,expect} from '@playwright/test';
 
 for(const mode of ['classic','snake','teams','team-snake'])test(`six-rider ${mode} renders through movement`,async({page},testInfo)=>{
   test.skip(testInfo.project.name!=='Chrome','Mode coverage complements controls/media checks in all three browsers.');
   const errors=[];page.on('pageerror',error=>errors.push(error.message));
   await page.goto('/');
-  await page.locator('#create-form [name=playerName]').fill('Mode Rider');
-  await page.locator('#create-form [name=lobbyName]').fill(`${mode} visual check`);
+  await page.locator('#player-name').fill('Mode Rider');
+  await openHost(page);await page.locator('#create-form [name=lobbyName]').fill(`${mode} visual check`);
   await page.locator('#create-form [name=mode]').selectOption(mode);
-  await page.locator('#create-form [name=localPlayers]').selectOption('4');
+  await page.locator('#local-players').selectOption('4');
   await page.locator('#create-form [name=gridSize]').selectOption('960');
   await page.locator('#create-form [name=speed]').selectOption('6');
   await page.locator('#create-form [name=botDifficulty]').selectOption('3');

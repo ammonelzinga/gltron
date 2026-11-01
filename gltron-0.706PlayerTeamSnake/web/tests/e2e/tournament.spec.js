@@ -1,11 +1,12 @@
+import {openHost,openPreferences,openAdvanced,openJoinPassword} from './landing-helpers.js';
 import { test, expect } from '@playwright/test';
 
 async function createSevenPlayerTournament(context) {
   const host = await context.newPage();
   await host.goto('/');
-  await host.locator('#create-form [name="playerName"]').fill('Host Rider');
-  await host.locator('#create-form [name="lobbyName"]').fill('Seven Rider Championship');
-  await host.locator('#session-kind').selectOption('tournament');
+  await host.locator('#player-name').fill('Host Rider');
+  await openHost(host);await host.locator('#create-form [name="lobbyName"]').fill('Seven Rider Championship');
+  await openHost(host);await host.locator('#session-kind').selectOption('tournament');
   await host.locator('[name="maxEntrants"]').selectOption('8');
   await host.locator('[name="playersPerHeat"]').selectOption('4');
   await host.locator('[name="advancePerHeat"]').selectOption('2');
@@ -22,7 +23,7 @@ async function createSevenPlayerTournament(context) {
     const guest = await context.newPage();
     guests.push(guest);
     await guest.goto(`/?room=${code}`);
-    await guest.locator('#join-form [name="playerName"]').fill(`Rider ${index}`);
+    await guest.locator('#player-name').fill(`Rider ${index}`);
     await guest.getByRole('button', { name: 'Join lobby' }).click();
     await expect(guest.locator('#lobby')).toBeVisible();
   }
@@ -42,9 +43,9 @@ test.describe('production lobby smoke tests', () => {
     const browserErrors = [];
     page.on('pageerror', error => browserErrors.push(error.message));
     await page.goto('/');
-    await page.locator('#create-form [name="playerName"]').fill('Local Rider');
-    await page.locator('#create-form [name="lobbyName"]').fill('Full Grid');
-    await page.locator('#create-form [name="localPlayers"]').selectOption('4');
+    await page.locator('#player-name').fill('Local Rider');
+    await openHost(page);await page.locator('#create-form [name="lobbyName"]').fill('Full Grid');
+    await page.locator('#local-players').selectOption('4');
     await page.locator('#create-form [name="gridSize"]').selectOption('960');
     await page.locator('#create-form [name="speed"]').selectOption('11');
     await page.getByRole('button', { name: 'Create lobby' }).click();
@@ -73,14 +74,14 @@ test.describe('production lobby smoke tests', () => {
     guest.on('pageerror', error => browserErrors.push(`guest: ${error.message}`));
 
     await host.goto('/');
-    await host.locator('#create-form [name="playerName"]').fill('Host');
-    await host.locator('#create-form [name="lobbyName"]').fill('Two Rider Test');
+    await host.locator('#player-name').fill('Host');
+    await openHost(host);await host.locator('#create-form [name="lobbyName"]').fill('Two Rider Test');
     await host.getByRole('button', { name: 'Create lobby' }).click();
     await expect(host.locator('#lobby')).toBeVisible();
     const code = (await host.locator('#room-code').textContent()).trim();
 
     await guest.goto(`/?room=${code}`);
-    await guest.locator('#join-form [name="playerName"]').fill('Guest');
+    await guest.locator('#player-name').fill('Guest');
     await guest.getByRole('button', { name: 'Join lobby' }).click();
     await expect(host.locator('#player-list .player')).toHaveCount(2);
 
@@ -111,7 +112,7 @@ test.describe('production lobby smoke tests', () => {
   test('landing and tournament controls render cleanly', async ({ page }) => {
     await page.goto('/');
     await expect(page.getByRole('heading', { name: /glTrof/i })).toBeVisible();
-    await page.locator('#session-kind').selectOption('tournament');
+    await openHost(page);await page.locator('#session-kind').selectOption('tournament');
     await expect(page.locator('#tournament-settings')).toBeVisible();
     await expect(page.getByText('Odd entrant counts are balanced automatically.')).toBeVisible();
   });
@@ -119,10 +120,10 @@ test.describe('production lobby smoke tests', () => {
   test('private password rooms reject the wrong password and accept the right one', async ({ context }) => {
     const host = await context.newPage();
     await host.goto('/');
-    await host.locator('#create-form [name="playerName"]').fill('Host');
-    await host.locator('#create-form [name="lobbyName"]').fill('Private Grid');
+    await host.locator('#player-name').fill('Host');
+    await openHost(host);await host.locator('#create-form [name="lobbyName"]').fill('Private Grid');
     await host.locator('#create-form [name="visibility"]').selectOption('private');
-    await host.locator('#create-form [name="password"]').fill('neon-secret');
+    await openAdvanced(host);await host.locator('#create-form [name="password"]').fill('neon-secret');
     await host.getByRole('button', { name: 'Create lobby' }).click();
     await expect(host.locator('#lobby')).toBeVisible();
     await expect(host.locator('#lobby')).toBeVisible();
@@ -130,11 +131,11 @@ test.describe('production lobby smoke tests', () => {
 
     const guest = await context.newPage();
     await guest.goto(`/?room=${code}`);
-    await guest.locator('#join-form [name="playerName"]').fill('Guest');
-    await guest.locator('#join-form [name="password"]').fill('wrong');
+    await guest.locator('#player-name').fill('Guest');
+    await openJoinPassword(guest);await guest.locator('#join-form [name="password"]').fill('wrong');
     await guest.getByRole('button', { name: 'Join lobby' }).click();
     await expect(guest.locator('#landing-status')).toHaveText('The lobby password is incorrect.');
-    await guest.locator('#join-form [name="password"]').fill('neon-secret');
+    await openJoinPassword(guest);await guest.locator('#join-form [name="password"]').fill('neon-secret');
     await guest.getByRole('button', { name: 'Join lobby' }).click();
     await expect(guest.locator('#lobby')).toBeVisible();
     await expect(host.locator('#player-list .player')).toHaveCount(2);
@@ -164,7 +165,7 @@ test.describe('full tournament flow', () => {
     await finalCard.locator('.score-input').nth(1).fill('4');
     const spectator = await context.newPage();
     await spectator.goto(`/?room=${code}`);
-    await spectator.locator('#join-form [name="playerName"]').fill('Late Spectator');
+    await spectator.locator('#player-name').fill('Late Spectator');
     await spectator.getByRole('button', { name: 'Join lobby' }).click();
     await expect(spectator.getByText('Spectator', { exact: true })).toBeVisible();
     await expect(spectator.locator('#spectator-panel')).toBeVisible();
@@ -185,9 +186,9 @@ test.describe('full tournament flow', () => {
     const browserErrors = [];
     host.on('pageerror', error => browserErrors.push(error.message));
     await host.goto('/');
-    await host.locator('#create-form [name="playerName"]').fill('Host');
-    await host.locator('#create-form [name="lobbyName"]').fill('Live Arena');
-    await host.locator('#session-kind').selectOption('tournament');
+    await host.locator('#player-name').fill('Host');
+    await openHost(host);await host.locator('#create-form [name="lobbyName"]').fill('Live Arena');
+    await openHost(host);await host.locator('#session-kind').selectOption('tournament');
     await host.locator('[name="maxEntrants"]').selectOption('8');
     await host.locator('[name="playersPerHeat"]').selectOption('2');
     await host.locator('[name="advancePerHeat"]').selectOption('1');
@@ -198,7 +199,7 @@ test.describe('full tournament flow', () => {
     const guest = await context.newPage();
     guest.on('pageerror', error => browserErrors.push(error.message));
     await guest.goto(`/?room=${code}`);
-    await guest.locator('#join-form [name="playerName"]').fill('Guest');
+    await guest.locator('#player-name').fill('Guest');
     await guest.getByRole('button', { name: 'Join lobby' }).click();
     await expect(host.locator('#player-list .player')).toHaveCount(2);
 
@@ -220,9 +221,9 @@ test.describe('full tournament flow', () => {
     test.skip(testInfo.project.name !== 'Chrome', 'One full multi-arena media-path run is sufficient');
     const host = await context.newPage();
     await host.goto('/');
-    await host.locator('#create-form [name="playerName"]').fill('Host');
-    await host.locator('#create-form [name="lobbyName"]').fill('Parallel Arenas');
-    await host.locator('#session-kind').selectOption('tournament');
+    await host.locator('#player-name').fill('Host');
+    await openHost(host);await host.locator('#create-form [name="lobbyName"]').fill('Parallel Arenas');
+    await openHost(host);await host.locator('#session-kind').selectOption('tournament');
     await host.locator('[name="playersPerHeat"]').selectOption('2');
     await host.locator('[name="advancePerHeat"]').selectOption('1');
     await host.locator('[name="finalPlayers"]').selectOption('2');
@@ -238,7 +239,7 @@ test.describe('full tournament flow', () => {
       const guest = await context.newPage();
       guests.push(guest);
       await guest.goto(`/?room=${code}`);
-      await guest.locator('#join-form [name="playerName"]').fill(`Guest ${index}`);
+      await guest.locator('#player-name').fill(`Guest ${index}`);
       await guest.getByRole('button', { name: 'Join lobby' }).click();
       await expect(guest.locator('#lobby')).toBeVisible();
     }

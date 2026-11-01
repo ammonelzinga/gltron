@@ -1,3 +1,4 @@
+import {openHost,openPreferences,openAdvanced,openJoinPassword} from './landing-helpers.js';
 import {test,expect,chromium} from '@playwright/test';
 import {spawn} from 'node:child_process';
 import {mkdtemp,readFile,rm} from 'node:fs/promises';
@@ -27,9 +28,9 @@ for(const crossBrowser of [false,true]){
       const errors=[];for(const page of [host,guest])page.on('pageerror',error=>errors.push(error.message));
       await host.bringToFront();
       await host.goto('http://127.0.0.1:4173/');
-      await host.locator('#create-form [name=playerName]').fill('Background Host');
-      await host.locator('#create-form [name=lobbyName]').fill('Background clock check');
-      await host.locator('#create-form [name=localPlayers]').selectOption('2');
+      await host.locator('#player-name').fill('Background Host');
+      await openHost(host);await host.locator('#create-form [name=lobbyName]').fill('Background clock check');
+      await host.locator('#local-players').selectOption('2');
       await host.locator('#create-form [name=gridSize]').selectOption('960');
       await host.locator('#create-form [name=speed]').selectOption('6');
       await host.getByRole('button',{name:'Create lobby'}).click();
@@ -37,7 +38,7 @@ for(const crossBrowser of [false,true]){
       const code=await host.locator('#room-code').textContent();
       await guest.bringToFront();
       await guest.goto(`http://127.0.0.1:4173/?room=${code}`);
-      await guest.locator('#join-form [name=playerName]').fill('Other Browser');
+      await guest.locator('#player-name').fill('Other Browser');
       await guest.getByRole('button',{name:'Join lobby'}).click();
       await expect(guest.locator('#lobby')).toBeVisible();
       await expect(host.locator('#player-list .player')).toHaveCount(3);

@@ -1,3 +1,4 @@
+import {openHost,openPreferences,openAdvanced,openJoinPassword} from './landing-helpers.js';
 import {test,expect} from '@playwright/test';
 import {start,call} from './native-helpers.js';
 
@@ -27,14 +28,14 @@ test('each browser renders native state and host departure transfers live match'
 
 test('two parallel tournament arenas survive organizer departure',async({context},info)=>{
   const host=await context.newPage(),guests=[await context.newPage(),await context.newPage(),await context.newPage()];
-  await host.goto('/');await host.locator('#create-form [name=playerName]').fill('Organizer');await host.locator('#create-form [name=lobbyName]').fill('Migration cup');
-  await host.locator('#session-kind').selectOption('tournament');await host.locator('[name=hostParticipates]').uncheck();
+  await host.goto('/');await host.locator('#player-name').fill('Organizer');await openHost(host);await host.locator('#create-form [name=lobbyName]').fill('Migration cup');
+  await openHost(host);await host.locator('#session-kind').selectOption('tournament');await host.locator('[name=hostParticipates]').uncheck();
   await host.locator('[name=playersPerHeat]').selectOption('2');await host.locator('[name=advancePerHeat]').selectOption('1');await host.locator('[name=maxParallel]').selectOption('2');await host.locator('[name=seeding]').selectOption('join');
   await host.locator('#create-form [name=gridSize]').selectOption('960');await host.locator('#create-form [name=speed]').selectOption('6');await host.locator('[name=pointsToWin]').fill('99');
   await host.getByRole('button',{name:'Create lobby'}).click();await expect(host.locator('#lobby')).toBeVisible();
   const code=await host.locator('#room-code').textContent();
   for(const [index,p] of guests.entries()){
-    await p.goto(`/?room=${code}`);await p.locator('#join-form [name=playerName]').fill(`Cup ${index}`);if(index===0)await p.locator('#join-form [name=localPlayers]').selectOption('2');
+    await p.goto(`/?room=${code}`);await p.locator('#player-name').fill(`Cup ${index}`);if(index===0)await p.locator('#local-players').selectOption('2');
     await p.getByRole('button',{name:'Join lobby'}).click();await expect(p.locator('#lobby')).toBeVisible();
   }
   await expect(host.locator('#player-list .player')).toHaveCount(5);

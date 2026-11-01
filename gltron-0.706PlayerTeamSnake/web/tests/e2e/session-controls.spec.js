@@ -1,3 +1,4 @@
+import {openHost,openPreferences,openAdvanced,openJoinPassword} from './landing-helpers.js';
 import {test,expect} from '@playwright/test';
 import {start} from './native-helpers.js';
 
@@ -9,8 +10,8 @@ test('lost lobby responses retry without repeating committed changes',async({pag
       dropped=true;await route.fetch();await route.abort();
     }else await route.continue();
   });
-  await page.locator('#create-form [name=playerName]').fill('Retry host');
-  await page.locator('#create-form [name=lobbyName]').fill('Retry check');
+  await page.locator('#player-name').fill('Retry host');
+  await openHost(page);await page.locator('#create-form [name=lobbyName]').fill('Retry check');
   await page.getByRole('button',{name:'Create lobby'}).click();
   await expect(page.locator('#lobby')).toBeVisible();expect(dropped).toBe(true);
   await expect(page.locator('#player-list .player')).toHaveCount(1);
@@ -37,9 +38,9 @@ test('Exit hands over hosting and final Exit removes the room',async({context})=
 
 test('spectator switches native rider cameras and parallel tournament games',async({context},info)=>{
   const host=await context.newPage();await host.goto('/');
-  await host.locator('#create-form [name=playerName]').fill('Organizer');
-  await host.locator('#create-form [name=lobbyName]').fill('Spectator checks');
-  await host.locator('#session-kind').selectOption('tournament');
+  await host.locator('#player-name').fill('Organizer');
+  await openHost(host);await host.locator('#create-form [name=lobbyName]').fill('Spectator checks');
+  await openHost(host);await host.locator('#session-kind').selectOption('tournament');
   await host.locator('[name=hostParticipates]').uncheck();
   await host.locator('[name=playersPerHeat]').selectOption('2');
   await host.locator('[name=advancePerHeat]').selectOption('1');
@@ -52,8 +53,8 @@ test('spectator switches native rider cameras and parallel tournament games',asy
   await expect(host.locator('#lobby')).toBeVisible();const code=await host.locator('#room-code').textContent();
   for(let i=0;i<2;i++){
     const p=await context.newPage();await p.goto('/?room='+code);
-    await p.locator('#join-form [name=playerName]').fill('Riders '+i);
-    await p.locator('#join-form [name=localPlayers]').selectOption('2');
+    await p.locator('#player-name').fill('Riders '+i);
+    await p.locator('#local-players').selectOption('2');
     await p.getByRole('button',{name:'Join lobby'}).click();await expect(p.locator('#lobby')).toBeVisible();
   }
   await expect(host.locator('#player-list .player')).toHaveCount(5);
@@ -63,7 +64,7 @@ test('spectator switches native rider cameras and parallel tournament games',asy
     await expect(host.locator('#host-arenas .arena-view')).toHaveCount(i,{timeout:35000});
   }
   const spectator=await context.newPage();await spectator.goto('/?room='+code);
-  await spectator.locator('#join-form [name=playerName]').fill('Watcher');
+  await spectator.locator('#player-name').fill('Watcher');
   await spectator.getByRole('button',{name:'Join lobby'}).click();
   await expect(spectator.locator('[data-watch-match]')).toHaveCount(2);
   await spectator.locator('[data-watch-match]').first().click();

@@ -10,54 +10,61 @@
   <body>
     <main id="app">
       <section id="landing" class="page-shell">
+        <nav class="landing-nav" aria-label="Main"><a class="wordmark" href="/">gl<span>Trof</span></a><span class="nav-caption">ZINGABEE GAMES / LIGHT CYCLES</span><button id="show-controls" class="quiet" type="button">Controls &amp; help</button></nav>
         <header class="hero">
-          <p class="eyebrow">Zingabee Games / Light cycle arena</p>
-          <h1>gl<span>Trof</span></h1>
-          <p class="lede">Enter the grid.</p>
-          <p class="hero-caption">The original light-cycle game. Six riders. Your browser.</p>
+          <div class="hero-copy"><p class="eyebrow">The grid is yours</p><h1>gl<span>Trof</span></h1><p class="lede">Outride. Outlast.</p><p class="hero-caption">Six riders. Walls of light. One last cycle standing.</p><div class="hero-tags"><span>Original GLtron engine</span><span>Up to 4 on one keyboard</span></div></div>
           <img class="hero-bikes" src="/art/menu-bikes.png" alt="Gold and blue GLtron light cycles" />
         </header>
-
-        <form id="quick-form" class="panel quick-panel">
-          <div><p class="eyebrow">No room code needed</p><h2>Find your next race</h2><p class="muted">Pool with other riders. After 10 seconds, find the closest game. Lock any setting you need.</p></div>
-          <div class="quick-fields">
-            <label>Player name<input name="playerName" maxlength="24" required autocomplete="nickname" placeholder="Grid rider" /></label>
-            <div class="quick-preference"><label>Local riders<select name="localPlayers"><option selected>1</option><option>2</option><option>3</option><option>4</option></select></label><label class="requirement"><input type="checkbox" name="required-localPlayers" checked disabled /> Absolutely required (local riders)</label></div>
-            <div class="quick-preference"><label>Preferred grid<select name="gridSize"><option value="">Any size</option><option value="240">Small</option><option value="480">Standard</option><option value="720" selected>Large</option><option value="960">Vast</option></select></label><label class="requirement"><input type="checkbox" name="required-gridSize"  /> Absolutely required</label></div>
-            <div class="quick-preference"><label>Game mode<select name="mode"><option value="">Any mode</option><option value="classic">Classic</option><option value="snake">Snake</option><option value="teams">3 Teams</option><option value="team-snake">Team Snake</option></select></label><label class="requirement"><input type="checkbox" name="required-mode"  /> Absolutely required</label></div>
-            <div class="quick-preference"><label>Speed<select name="speed"><option value="">Any speed</option><option value="6">Cruise</option><option value="8.5">Classic</option><option value="11">Fast</option><option value="14">Extreme</option></select></label><label class="requirement"><input type="checkbox" name="required-speed"  /> Absolutely required</label></div>
-          </div>
-          <input name="password" type="hidden" value="" />
-          <button class="primary quick-button" type="submit">Join quick match</button><button id="cancel-quick" class="quiet hidden" type="button">Cancel search</button>
-          <p id="quick-status" class="status" role="status"></p>
-        </form>
-
-        <section class="public-section">
-          <div class="section-title"><div><p class="eyebrow">Live now</p><h2>Public lobbies</h2></div><button id="refresh-lobbies" class="quiet" type="button">Refresh</button></div>
+        <section class="pilot-strip" aria-label="Your riders">
+          <div class="pilot-mark" aria-hidden="true">01</div>
+          <label for="player-name">Your name<input id="player-name" name="playerName" maxlength="24" required autocomplete="nickname" placeholder="Enter your rider name" aria-describedby="name-help" /></label>
+          <label for="local-players">Players on this browser<select id="local-players" name="localPlayers"><option value="1">1 rider</option><option value="2">2 riders · split screen</option><option value="3">3 riders · split screen</option><option value="4">4 riders · split screen</option></select></label>
+          <p id="name-help">Your name travels with you.<br /><span>Used for quick match, joining, hosting.</span></p>
+        </section>
+        <p id="landing-status" class="status" role="status"></p>
+        <div class="play-options">
+          <form id="quick-form" class="panel quick-panel">
+            <div class="option-heading"><span class="option-kicker">01 / JUMP IN</span><span class="live-dot">PUBLIC PLAY</span></div>
+            <h2>Quick match</h2><p class="option-description">Find your next rivals. We’ll bring the grid together.</p>
+            <button class="primary quick-button" type="submit"><span>Join quick match</span><span aria-hidden="true">↗</span></button><button id="cancel-quick" class="quiet hidden" type="button">Cancel search</button>
+            <input name="password" type="hidden" value="" />
+            <details id="quick-preferences" class="preference-settings"><summary>Match preferences <span id="preference-summary">Large grid · Any mode · Any speed</span></summary>
+              <div class="quick-fields">
+                <div class="quick-preference"><label>Preferred grid<select name="gridSize"><option value="">Any size</option><option value="240">Small</option><option value="480">Standard</option><option value="720" selected>Large</option><option value="960">Vast</option></select></label><label class="requirement"><input type="checkbox" name="required-gridSize" /> Absolutely required</label></div>
+                <div class="quick-preference"><label>Game mode<select name="mode"><option value="">Any mode</option><option value="classic">Classic</option><option value="snake">Snake</option><option value="teams">3 Teams</option><option value="team-snake">Team Snake</option></select></label><label class="requirement"><input type="checkbox" name="required-mode" /> Absolutely required</label></div>
+                <div class="quick-preference"><label>Speed<select name="speed"><option value="">Any speed</option><option value="6">Cruise</option><option value="8.5">Classic</option><option value="11">Fast</option><option value="14">Extreme</option></select></label><label class="requirement"><input type="checkbox" name="required-speed" /> Absolutely required</label></div>
+              </div><p class="form-note">Exact preferences for 10 seconds, then the closest available match. Absolutely required settings always stay locked. Your local riders always stay together.</p>
+            </details>
+            <p id="quick-status" class="status" role="status"></p>
+          </form>
+          <section class="panel friends-panel">
+            <div class="option-heading"><span class="option-kicker">02 / YOUR CREW</span><span class="crew-icon" aria-hidden="true">◇</span></div>
+            <h2>Play with friends</h2><p class="option-description">Have an invite? Enter the room code.</p>
+            <form id="join-form"><div class="code-row"><label class="sr-only" for="room-code-input">Room code</label><input id="room-code-input" name="roomCode" class="room-code-input" maxlength="8" required autocomplete="off" spellcheck="false" placeholder="ROOM CODE" /><button class="secondary" type="submit">Join lobby</button></div>
+              <details id="join-password" class="password-settings"><summary>Room needs a password?</summary><label class="sr-only" for="join-room-password">Room password</label><input id="join-room-password" name="password" type="password" maxlength="64" autocomplete="current-password" placeholder="Enter room password" /></details>
+            </form>
+            <div class="host-prompt"><div><strong>Make it your game.</strong><p>Custom rules, bots, full tournaments.</p></div><button class="quiet host-launch" type="button" data-open-host>Host a lobby <span aria-hidden="true">↗</span></button></div>
+          </section>
+        </div>
+        <section class="public-section" aria-labelledby="public-heading">
+          <div class="section-title"><div><p class="eyebrow">Choose your grid</p><h2 id="public-heading">Public lobbies <span id="lobby-count" class="lobby-count">0</span></h2></div><button id="refresh-lobbies" class="quiet" type="button">Refresh</button></div>
+          <div class="lobby-filters"><label class="sr-only" for="lobby-search">Find a lobby</label><input id="lobby-search" type="search" placeholder="Find a lobby by name or code" /><label class="sr-only" for="lobby-mode">Filter by game mode</label><select id="lobby-mode"><option value="">All game modes</option><option value="classic">Classic</option><option value="snake">Snake</option><option value="teams">3 Teams</option><option value="team-snake">Team Snake</option></select><label class="sr-only" for="lobby-kind">Filter by session</label><select id="lobby-kind"><option value="">Matches + tournaments</option><option value="game">Matches</option><option value="tournament">Tournaments</option></select></div>
           <div id="public-lobbies" class="lobby-list" aria-live="polite"><p class="empty-state">Looking for open grids…</p></div>
         </section>
+        <details class="panel control-settings">
+          <summary>Local control settings</summary>
+          <p class="muted">Each browser starts with Player 1: ←/→ turn, ↑ boost, comma/period glance. Local Player 2: A/D turn, W boost, Q/E glance. Local Player 3: J/L turn, I boost, U/O glance. Local Player 4 uses the numpad. Select a key field to change it.</p>
+          <div id="control-config" class="control-config"></div>
+        </details>
 
-        <div class="action-grid">
-          <form id="create-form" class="panel">
-            <div class="panel-heading"><span class="step">01</span><h2>Create a lobby</h2></div>
-            <label>Player name<input name="playerName" maxlength="24" required autocomplete="nickname" placeholder="Grid rider" /></label>
-            <label>Players on this browser<select name="localPlayers"><option selected>1</option><option>2</option><option>3</option><option>4</option></select></label>
-            <label>Lobby name<input name="lobbyName" maxlength="40" required placeholder="Friday night bikes" /></label>
-            <div class="field-row">
-              <label>Session<select name="kind" id="session-kind"><option value="game">Single match</option><option value="tournament">Tournament</option></select></label>
-              <label>Visibility<select name="visibility"><option value="public">Public</option><option value="private">Private</option></select></label>
-            </div>
-            <div class="field-row triple">
-              <label>Grid size<select name="gridSize"><option value="240">Small</option><option value="480">Standard</option><option value="720" selected>Large</option><option value="960">Vast</option></select></label>
-              <label>Speed<select name="speed"><option value="6">Cruise</option><option value="8.5" selected>Classic</option><option value="11">Fast</option><option value="14">Extreme</option></select></label>
-              <label>Points to win<input name="matchPoints" type="number" min="1" max="99" value="5" /></label>
-            </div>
-            <label>Bot difficulty<select name="botDifficulty"><option value="0">Dumb</option><option value="1">Fair</option><option value="2" selected>Smart</option><option value="3">Insane</option></select></label>
-            <label class="check"><input name="clearTrails" type="checkbox" checked /> Clear crashed riders’ trails immediately</label>
-            <div class="field-row">
-              <label>Mode<select name="mode"><option value="classic">Classic</option><option value="snake">Snake</option><option value="teams">3 Teams</option><option value="team-snake">Team Snake</option></select></label>
-              <label>Optional password<input name="password" type="password" maxlength="64" autocomplete="new-password" placeholder="Leave blank for none" /></label>
-            </div>
+
+
+        <footer class="landing-footer"><span>Keep moving. Make your own path.</span><span>glTrof / Built from GLtron</span></footer>
+        <dialog id="host-dialog" aria-labelledby="host-heading">
+          <div class="host-dialog-heading"><div><p class="eyebrow">Your grid. Your rules.</p><h2 id="host-heading">Host a lobby</h2></div><button id="close-host" class="quiet" type="button" aria-label="Close host setup">✕</button></div>
+          <form id="create-form">
+            <fieldset class="host-group"><legend>Lobby</legend><label>Lobby name<input name="lobbyName" maxlength="40" required value="My light-cycle lobby" placeholder="Name your lobby" /></label><div class="field-row"><label>Session<select name="kind" id="session-kind"><option value="game">Single match</option><option value="tournament">Tournament</option></select></label><label>Visibility<select name="visibility"><option value="public">Public · listed for everyone</option><option value="private">Private · invite code only</option></select></label></div></fieldset>
+            <fieldset class="host-group"><legend>Game rules</legend><div class="field-row"><label>Mode<select name="mode"><option value="classic">Classic</option><option value="snake">Snake</option><option value="teams">3 Teams</option><option value="team-snake">Team Snake</option></select></label><label>Grid size<select name="gridSize"><option value="240">Small</option><option value="480">Standard</option><option value="720" selected>Large</option><option value="960">Vast</option></select></label></div><div class="field-row triple"><label>Speed<select name="speed"><option value="6">Cruise</option><option value="8.5" selected>Classic</option><option value="11">Fast</option><option value="14">Extreme</option></select></label><label id="normal-match-points">Points to win<input name="matchPoints" type="number" min="1" max="99" value="5" /></label><label>Bot difficulty<select name="botDifficulty"><option value="0">Dumb</option><option value="1">Fair</option><option value="2" selected>Smart</option><option value="3">Insane</option></select></label></div><p class="form-note">Add bots after creating your lobby. Up to six riders per match.</p></fieldset>
             <fieldset id="tournament-settings" class="tournament-settings hidden">
               <legend>Tournament format</legend>
               <div class="field-row triple">
@@ -78,27 +85,11 @@
               </div>
               <p class="form-note">Odd entrant counts are balanced automatically. Seven riders in four-rider heats become groups of four and three.</p>
             </fieldset>
-            <button class="primary" type="submit">Create lobby</button>
+
+            <details id="host-advanced" class="host-advanced"><summary>Password &amp; advanced rules</summary><label>Optional password<input name="password" type="password" maxlength="64" autocomplete="new-password" placeholder="Leave blank for no password" /></label><label class="check"><input name="clearTrails" type="checkbox" checked /> Clear crashed riders’ trails immediately</label></details>
+            <p id="host-status" class="status" role="status"></p><div class="host-submit"><p>Sharing a browser? Rider count comes from your name bar.</p><button class="primary" type="submit">Create lobby</button></div>
           </form>
-
-          <form id="join-form" class="panel">
-            <div class="panel-heading"><span class="step">02</span><h2>Join by code</h2></div>
-            <label>Player name<input name="playerName" maxlength="24" required autocomplete="nickname" placeholder="Grid rider" /></label>
-            <label>Players on this browser<select name="localPlayers"><option selected>1</option><option>2</option><option>3</option><option>4</option></select></label>
-            <label>Room code<input name="roomCode" class="room-code-input" maxlength="8" required autocomplete="off" placeholder="NEON42" /></label>
-            <label>Password<input name="password" type="password" maxlength="64" autocomplete="current-password" placeholder="Only if required" /></label>
-            <button class="secondary" type="submit">Join lobby</button>
-          </form>
-        </div>
-
-        <details class="panel control-settings">
-          <summary>Local control settings</summary>
-          <p class="muted">Each browser starts with Player 1: ←/→ turn, ↑ boost, comma/period glance. Local Player 2: A/D turn, W boost, Q/E glance. Local Player 3: J/L turn, I boost, U/O glance. Local Player 4 uses the numpad. Select a key field to change it.</p>
-          <div id="control-config" class="control-config"></div>
-        </details>
-
-
-        <p id="landing-status" class="status" role="status"></p>
+        </dialog>
       </section>
 
       <section id="lobby" class="page-shell hidden">

@@ -1,12 +1,13 @@
+import {openHost,openPreferences,openAdvanced,openJoinPassword} from './landing-helpers.js';
 import {test,expect} from '@playwright/test';
 
 test('home saves names, lists configuration and quick joins preferred room',async({context},info)=>{
   const host=await context.newPage(),guest=await context.newPage();
   await host.goto('/');
   await expect(host.locator('#create-form [name=gridSize]')).toHaveValue('720');
-  await host.locator('#create-form [name=playerName]').fill('Gold Rider');
+  await host.locator('#player-name').fill('Gold Rider');
   const name=`Large snake grid ${info.project.name}`;
-  await host.locator('#create-form [name=lobbyName]').fill(name);
+  await openHost(host);await host.locator('#create-form [name=lobbyName]').fill(name);
   await host.locator('#create-form [name=mode]').selectOption('snake');
   await host.locator('#create-form [name=botDifficulty]').selectOption('3');
   await host.getByRole('button',{name:'Create lobby'}).click();
@@ -18,18 +19,18 @@ test('home saves names, lists configuration and quick joins preferred room',asyn
   await expect(card).toContainText('Insane');
   await expect(card).toContainText('Crash trails clear');
   await guest.screenshot({path:`visual-review/home-${info.project.name}.png`,fullPage:true});
-  await guest.locator('#quick-form [name=playerName]').fill('Saved Rider');
-  await guest.locator('#quick-form [name=mode]').selectOption('teams');
+  await guest.locator('#player-name').fill('Saved Rider');
+  await openPreferences(guest);await guest.locator('#quick-form [name=mode]').selectOption('teams');
   await guest.getByRole('button',{name:'Join quick match'}).click();
   await expect(guest.locator('#quick-status')).toContainText('exact preferences');
   await guest.getByRole('button',{name:'Cancel search'}).click();
   await expect(guest.locator('#quick-status')).toContainText('cancelled');
-  await guest.locator('#quick-form [name=mode]').selectOption('snake');
+  await openPreferences(guest);await guest.locator('#quick-form [name=mode]').selectOption('snake');
   await guest.getByRole('button',{name:'Join quick match'}).click();
   await expect(guest.locator('#lobby')).toBeVisible();
   await expect(host.locator('#player-list .player')).toHaveCount(2);
   await guest.goto('/');
-  for(const form of ['quick','join','create'])await expect(guest.locator(`#${form}-form [name=playerName]`)).toHaveValue('Saved Rider');
+  await expect(guest.locator('#player-name')).toHaveValue('Saved Rider');await expect(guest.locator('input[name=playerName]')).toHaveCount(1);
   await guest.setViewportSize({width:390,height:844});
   await guest.screenshot({path:`visual-review/home-mobile-${info.project.name}.png`,fullPage:true});
   expect(await guest.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
@@ -39,8 +40,8 @@ test('ordinary match clears crashes and host starts connected rematch',async({co
   const host=await context.newPage(),guest=await context.newPage(),errors=[];
   for(const page of [host,guest])page.on('pageerror',e=>errors.push(e.message));
   await host.goto('/');
-  await host.locator('#create-form [name=playerName]').fill('Rematch Host');
-  await host.locator('#create-form [name=lobbyName]').fill('Again');
+  await host.locator('#player-name').fill('Rematch Host');
+  await openHost(host);await host.locator('#create-form [name=lobbyName]').fill('Again');
   await host.locator('#create-form [name=gridSize]').selectOption('240');
   await host.locator('#create-form [name=speed]').selectOption('14');
   await host.locator('#create-form [name=matchPoints]').fill('1');
@@ -48,7 +49,7 @@ test('ordinary match clears crashes and host starts connected rematch',async({co
   await expect(host.locator('#lobby')).toBeVisible();
   const code=await host.locator('#room-code').textContent();
   await guest.goto(`/?room=${code}`);
-  await guest.locator('#join-form [name=playerName]').fill('Rematch Guest');
+  await guest.locator('#player-name').fill('Rematch Guest');
   await guest.getByRole('button',{name:'Join lobby'}).click();
   await expect(host.locator('#player-list .player')).toHaveCount(2);
   await host.getByRole('button',{name:'Start match'}).click();

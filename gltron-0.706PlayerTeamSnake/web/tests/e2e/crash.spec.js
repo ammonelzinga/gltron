@@ -1,3 +1,4 @@
+import {openHost,openPreferences,openAdvanced,openJoinPassword} from './landing-helpers.js';
 import {test,expect} from '@playwright/test';
 import {writeFile} from 'node:fs/promises';
 
@@ -5,16 +6,16 @@ test('six-camera crash preserves impact timing, debris and rider camera',async({
   test.skip(testInfo.project.name==='Firefox','Crash rendering covered by Chrome and Edge.');
   const host=await context.newPage(),guest=await context.newPage();
   await host.goto('/');
-  await host.locator('#create-form [name=playerName]').fill('Crash Host');
-  await host.locator('#create-form [name=lobbyName]').fill('Crash visual check');
-  await host.locator('#create-form [name=localPlayers]').selectOption('4');
+  await host.locator('#player-name').fill('Crash Host');
+  await openHost(host);await host.locator('#create-form [name=lobbyName]').fill('Crash visual check');
+  await host.locator('#local-players').selectOption('4');
   await host.locator('#create-form [name=gridSize]').selectOption('240');
   await host.getByRole('button',{name:'Create lobby'}).click();
   await expect(host.locator('#lobby')).toBeVisible();
   const code=await host.locator('#room-code').textContent();
   await guest.goto(`/?room=${code}`);
-  await guest.locator('#join-form [name=playerName]').fill('Crash Guest');
-  await guest.locator('#join-form [name=localPlayers]').selectOption('2');
+  await guest.locator('#player-name').fill('Crash Guest');
+  await guest.locator('#local-players').selectOption('2');
   await guest.getByRole('button',{name:'Join lobby'}).click();
   await expect(host.locator('#player-list .player')).toHaveCount(6);
   await host.getByRole('button',{name:'Start match'}).click();

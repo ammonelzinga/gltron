@@ -1,11 +1,12 @@
+import {openHost,openPreferences,openAdvanced,openJoinPassword} from './landing-helpers.js';
 import {test,expect} from '@playwright/test';
 
 test('minimap uses gold, red and cyan rider colors after turns',async({page},info)=>{
   test.skip(info.project.name!=='Chrome','Pixel color check uses the host source canvas.');
   await page.goto('/');
-  await page.locator('#create-form [name=playerName]').fill('Color Rider');
-  await page.locator('#create-form [name=lobbyName]').fill('Color Grid');
-  await page.locator('#create-form [name=localPlayers]').selectOption('4');
+  await page.locator('#player-name').fill('Color Rider');
+  await openHost(page);await page.locator('#create-form [name=lobbyName]').fill('Color Grid');
+  await page.locator('#local-players').selectOption('4');
   await page.locator('#create-form [name=gridSize]').selectOption('960');
   await page.locator('#create-form [name=speed]').selectOption('6');
   await page.getByRole('button',{name:'Create lobby'}).click();

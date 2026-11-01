@@ -1,3 +1,4 @@
+import {openHost,openPreferences,openAdvanced,openJoinPassword} from './landing-helpers.js';
 import {test,expect} from '@playwright/test';
 
 test.beforeEach(async({request})=>{
@@ -6,9 +7,9 @@ test.beforeEach(async({request})=>{
 test('two quick-match browsers pool and start automatically',async({context},info)=>{
   const pages=[await context.newPage(),await context.newPage()];
   for(const [i,p] of pages.entries()){
-    await p.goto('/');await p.locator('#quick-form [name=playerName]').fill(`Pool ${i}`);
-    await p.locator('#quick-form [name=mode]').selectOption('classic');
-    await p.locator('#quick-form [name=required-mode]').check();
+    await p.goto('/');await p.locator('#player-name').fill(`Pool ${i}`);
+    await openPreferences(p);await p.locator('#quick-form [name=mode]').selectOption('classic');
+    await openPreferences(p);await p.locator('#quick-form [name=required-mode]').check();
     await p.getByRole('button',{name:'Join quick match'}).click();
   }
   for(const p of pages){await expect(p.locator('#game')).toBeVisible({timeout:45000});await expect(p.locator('#game')).toBeVisible({timeout:35000});await expect(p.locator('#game-loading')).toBeHidden({timeout:35000});}
@@ -18,7 +19,7 @@ test('two quick-match browsers pool and start automatically',async({context},inf
 });
 
 test('required setting stays locked beyond ten seconds, cancellation removes queue entry',async({page})=>{
-  await page.goto('/');await page.locator('#quick-form [name=mode]').selectOption('snake');await page.locator('#quick-form [name=required-mode]').check();
+  await page.goto('/');await openPreferences(page);await page.locator('#quick-form [name=mode]').selectOption('snake');await openPreferences(page);await page.locator('#quick-form [name=required-mode]').check();
   await page.getByRole('button',{name:'Join quick match'}).click();
   await expect(page.locator('#quick-status')).toContainText('closest game',{timeout:15000});
   await expect(page.locator('#landing')).toBeVisible();
@@ -31,11 +32,11 @@ test('required setting stays locked beyond ten seconds, cancellation removes que
 
 test('after ten seconds soft preferences join a completely different available game',async({context})=>{
   const host=await context.newPage(),guest=await context.newPage();
-  await host.goto('/');await host.locator('#create-form [name=lobbyName]').fill('Fallback room');
+  await host.goto('/');await openHost(host);await host.locator('#create-form [name=lobbyName]').fill('Fallback room');
   await host.locator('#create-form [name=gridSize]').selectOption('240');await host.locator('#create-form [name=speed]').selectOption('6');
   await host.getByRole('button',{name:'Create lobby'}).click();await expect(host.locator('#lobby')).toBeVisible();
   const code=await host.locator('#room-code').textContent();
-  await guest.goto('/');await guest.locator('#quick-form [name=gridSize]').selectOption('960');await guest.locator('#quick-form [name=mode]').selectOption('snake');await guest.locator('#quick-form [name=speed]').selectOption('14');
+  await guest.goto('/');await openPreferences(guest);await guest.locator('#quick-form [name=gridSize]').selectOption('960');await openPreferences(guest);await guest.locator('#quick-form [name=mode]').selectOption('snake');await openPreferences(guest);await guest.locator('#quick-form [name=speed]').selectOption('14');
   const start=Date.now();await guest.getByRole('button',{name:'Join quick match'}).click();
   await expect(guest.locator('#lobby')).toBeVisible({timeout:20000});expect(Date.now()-start).toBeGreaterThanOrEqual(9500);
   await expect(guest.locator('#room-code')).toHaveText(code);await expect(host.locator('#player-list .player')).toHaveCount(2);

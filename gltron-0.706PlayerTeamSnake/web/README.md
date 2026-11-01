@@ -4,6 +4,8 @@ The six-player GLTron fork is precompiled to WebAssembly. Browsers download the 
 
 ## Features
 
+- One remembered rider name and per-tab local rider count feed every play action. Quick-match preferences are collapsible; a focused host dialog groups lobby, game and tournament settings. Public lobbies support name/code, mode and session filters, one-click public joining, and password prompts when needed.
+
 - GLtron menu artwork and gold/blue home page, one-click quick match with size/mode/speed preferences, and configuration details on public room cards. New rooms default to Large (720).
 - Player names persist in the browser. Ordinary match results offer Play again votes; only the host starts the rematch, reusing existing WebRTC connections and clearing scores. Tournaments use their own bracket flow.
 - Opaque bike-colored trails and matching minimap markers/lines. Crashed trails disappear from rendering and collisions immediately by default; the host can keep them by unchecking the crash-clearing option.

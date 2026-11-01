@@ -1,4 +1,6 @@
 import './style.css';
+import './landing.css';
+import {riderFormData,validateRider,setupLanding} from './landing-ui.js';
 import {startEngineClock} from './engine-clock.js';
 import {gridName,roomConfiguration,quickCandidates} from './lobby-features.js';
 import { open, randomSalt, seal } from './crypto.js';
@@ -52,10 +54,12 @@ async function startRematch(){
 }
 
 async function quickMatch(form){
+  if(!validateRider())return;
   if(!state.store)return setStatus('#quick-status','Connecting to lobbies...');
   const button=form.querySelector('button[type=submit]'),controller=new AbortController();state.quickSearch=controller;
   button.disabled=true;$('#cancel-quick').classList.remove('hidden');
-  const data=new FormData(form),preferences=Object.fromEntries(data);
+  const data=riderFormData(form),preferences=Object.fromEntries(data);
+  $('#player-name').disabled=true;$('#local-players').disabled=true;
   rememberName(data.get('playerName'));
   const entry={id:state.browserId,uid:state.store.uid,name:data.get('playerName').trim(),localPlayers:Number(data.get('localPlayers')||1),preferences:{gridSize:preferences.gridSize,mode:preferences.mode,speed:preferences.speed},required:Object.fromEntries(['gridSize','mode','speed'].map(key=>[key,data.get('required-'+key)==='on'])),joinedAt:state.store.now()};
   try{
@@ -65,7 +69,7 @@ async function quickMatch(form){
       await createLobby($('#create-form'),{data:values,code:group.code,quickPool:group.id,quickExpected:group.entryIds});
     }});
     if(controller.signal.aborted)setStatus('#quick-status','Search cancelled.');
-  }catch(error){setStatus('#quick-status',error.message);}finally{button.disabled=false;$('#cancel-quick').classList.add('hidden');state.quickSearch=null;}
+  }catch(error){setStatus('#quick-status',error.message);}finally{button.disabled=false;$('#cancel-quick').classList.add('hidden');state.quickSearch=null;$('#player-name').disabled=false;$('#local-players').disabled=false;}
 }
 
 function maybeAutoStart(room){
@@ -152,7 +156,8 @@ async function uniqueCode() { for(let attempt=0;attempt<8;attempt++){ const code
 function tournamentConfig(data) { return normalizeTournamentConfig({ maxEntrants:data.get('maxEntrants'),playersPerHeat:data.get('playersPerHeat'),advancePerHeat:data.get('advancePerHeat'),finalPlayers:data.get('finalPlayers'),pointsToWin:data.get('pointsToWin'),maxParallel:data.get('maxParallel'),seeding:data.get('seeding'),allowSpectators:data.get('allowSpectators')==='on',thirdPlaceMatch:data.get('thirdPlaceMatch')==='on' }); }
 
 async function createLobby(form,override={}) {
-  const data=override.data||new FormData(form),code=override.code||await uniqueCode(),password=data.get('password'),salt=randomSalt(),kind=data.get('kind');
+  if(!override.data&&!validateRider())return;
+  const data=override.data||riderFormData(form),code=override.code||await uniqueCode(),password=data.get('password'),salt=randomSalt(),kind=data.get('kind');
   rememberName(data.get('playerName'));
   const hostParticipates=kind!=='tournament'||data.get('hostParticipates')==='on';
   const localCount=hostParticipates?Number(data.get('localPlayers')||1):1,localPlayers=localPlayerBatch(data.get('playerName').trim(),localCount,{authUid:state.store.uid,host:true,role:hostParticipates?'player':'organizer'}).map((player,slot)=>({...player,slot})),player=localPlayers[0];
@@ -167,7 +172,8 @@ async function createLobby(form,override={}) {
 }
 
 async function joinLobby(form,overrideCode) {
-  const data=new FormData(form),code=cleanCode(overrideCode||data.get('roomCode')),password=data.get('password');
+  if(!validateRider())return;
+  const data=riderFormData(form),code=cleanCode(overrideCode||data.get('roomCode')),password=data.get('password');
   rememberName(data.get('playerName'));
   const room=await state.store.get(`rooms/${code}`); if(!room) throw new Error('No lobby uses that room code.');
   const lateSpectator=room.meta.started&&room.meta.kind==='tournament'&&room.tournament.config.allowSpectators;
@@ -240,6 +246,7 @@ function renderLobby(room) {
 }
 
 function enterLobby(room,player,password,host,localPlayers=[player]){
+  $('#host-dialog').close();
   state.room=room;state.player=player;state.localPlayers=localPlayers;state.password=password;state.host=host;
   const hooks=nativeSessionHooks(state,{source:()=>$('#gltron-canvas'),view:()=>$('#player-view'),create:createGameModule,mirror:startViewMirror,loaded:()=>{$('#game-loading').classList.add('hidden');$('#connection-status').textContent='Players connected';},status:message=>$('#connection-status').textContent=message,recover:recoverAuthority,render:renderLobby});
   state.nativeHooks=hooks;
@@ -362,12 +369,28 @@ async function reorderSeed(id,delta){const available=entrants().map(player=>play
 async function shuffleSeeds(){const ids=entrants().map(player=>player.id);for(let i=ids.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[ids[i],ids[j]]=[ids[j],ids[i]];}await state.store.set(`rooms/${state.room.meta.code}/tournament/manualOrder`,ids);}
 
 async function refreshPublic(){
-  const rooms=await state.store.get('rooms')||{},openRooms=Object.values(rooms).filter(room=>room?.meta?.public&&(!room.authority||room.authority.leaseUntil>Date.now()-5000)&&(!room.meta.started||(room.meta.kind==='tournament'&&room.tournament.config.allowSpectators))).sort((a,b)=>b.meta.createdAt-a.meta.createdAt);
-  $('#public-lobbies').innerHTML=openRooms.length?openRooms.map(room=>{
-    const count=Object.keys(room.players||{}).length,capacity=room.meta.kind==='game'?6:room.tournament.config.maxEntrants;
-    const full=!room.meta.started&&count>=capacity;
-    return `<article class="lobby-card"><div><p class="eyebrow">${room.meta.kind==='tournament'?'Tournament':'Open grid'}  /  ${escapeHtml(room.meta.code)}</p><h3>${escapeHtml(room.meta.name)}</h3><div class="room-config">${roomConfiguration(room).map(value=>`<span>${escapeHtml(value)}</span>`).join('')}</div></div><span class="meta">${count}/${capacity} riders</span><button class="quiet" data-join-code="${room.meta.code}" ${full?'disabled':''}>${room.meta.started?'Spectate':full?'Full':'Join'}</button></article>`;
-  }).join(''):'<p class="empty-state">No public lobbies are open. Create the first one.</p>';
+  const rooms=await state.store.get('rooms')||{},now=state.store.now?.()||Date.now();
+  state.publicRooms=Object.values(rooms).filter(room=>room?.meta?.public&&(!room.authority||room.authority.leaseUntil>now-5000)&&(!room.meta.started||(room.meta.kind==='tournament'&&room.tournament.config.allowSpectators))).sort((a,b)=>b.meta.createdAt-a.meta.createdAt);
+  renderPublicLobbies();
+}
+function renderPublicLobbies(){
+  const query=$('#lobby-search').value.trim().toLowerCase(),mode=$('#lobby-mode').value,kind=$('#lobby-kind').value;
+  const rooms=(state.publicRooms||[]).filter(room=>(!query||(room.meta.name+' '+room.meta.code).toLowerCase().includes(query))&&(!mode||room.meta.mode===mode)&&(!kind||room.meta.kind===kind));
+  $('#lobby-count').textContent=rooms.length;
+  $('#public-lobbies').innerHTML=rooms.length?rooms.map(room=>{
+    const count=Object.values(room.players||{}).filter(p=>!['organizer','spectator'].includes(p.role)).length,capacity=room.meta.kind==='game'?6:room.tournament.config.maxEntrants,full=!room.meta.started&&count>=capacity;
+    return `<article class="lobby-card"><div><p class="eyebrow">${room.meta.kind==='tournament'?'Tournament':'Open grid'} / ${escapeHtml(room.meta.code)}${room.meta.passwordRequired?' / Password':''}</p><h3>${escapeHtml(room.meta.name)}</h3><div class="room-config">${roomConfiguration(room).map(value=>`<span>${escapeHtml(value)}</span>`).join('')}</div></div><span class="meta">${count}/${capacity} riders</span><button class="quiet" data-join-code="${room.meta.code}" data-password="${Boolean(room.meta.passwordRequired)}" ${full?'disabled':''}>${room.meta.started?'Spectate':full?'Full':'Join'}</button></article>`;
+  }).join(''):`<div class="empty-grid"><div><h3>${(state.publicRooms||[]).length?'No matching grids.':'The grid is quiet.'}</h3><p>${(state.publicRooms||[]).length?'Try another filter, or host a lobby with your rules.':'Start a quick match to find riders, or invite friends to your own lobby.'}</p></div><button class="quiet" type="button" data-open-host>Host a game ↗</button></div>`;
+}
+async function joinPublicRoom(event){
+  const button=event.target.closest('[data-join-code]');if(!button||state.publicJoining)return;
+  $('#join-form [name=roomCode]').value=button.dataset.joinCode;
+  setStatus('#landing-status','');
+  if(button.dataset.password==='true'){
+    $('#join-password').open=true;$('#join-room-password').focus();$('#join-form').scrollIntoView({behavior:'smooth',block:'center'});return;
+  }
+  $('#join-room-password').value='';button.disabled=true;state.publicJoining=true;
+  try{await joinLobby($('#join-form'),button.dataset.joinCode);}catch(error){setStatus('#landing-status',error.message);}finally{button.disabled=false;state.publicJoining=false;}
 }
 async function leaveCurrentRoom(){
   const code=state.room.meta.code;
@@ -377,18 +400,14 @@ async function leaveCurrentRoom(){
 }
 function cleanup(){state.quickSearch?.abort();state.network?.close();clearInterval(state.singleRoundTimer);state.module?.webClock?.terminate();state.viewStops.splice(0).forEach(stop=>stop());state.stops.splice(0).forEach(stop=>stop());state.peers.splice(0).forEach(peer=>peer.close());state.guestConnection?.close?.();state.arenas.forEach(arena=>{clearInterval(arena.timer);arena.module.webClock?.terminate();arena.connections.forEach(connection=>connection.close());});}
 
-async function initialize(){renderControlConfig();$('#control-config').addEventListener('keydown',captureControl);state.store=await createStore();if(state.store.mode==='local-server')setStatus('#landing-status','Local testing: rooms shared across tabs and browsers on this computer.');if(state.store.mode==='local')setStatus('#landing-status','Local test mode: add Firebase environment settings before deployment.');await refreshPublic();state.stops.push(state.store.watch('rooms',refreshPublic));$('#session-kind').addEventListener('change',event=>$('#tournament-settings').classList.toggle('hidden',event.target.value!=='tournament'));$('#create-form').addEventListener('submit',async event=>{event.preventDefault();setStatus('#landing-status','');try{await createLobby(event.currentTarget);}catch(error){setStatus('#landing-status',error.message);}});$('#join-form').addEventListener('submit',async event=>{event.preventDefault();setStatus('#landing-status','');try{await joinLobby(event.currentTarget);}catch(error){setStatus('#landing-status',error.message);}});$('#public-lobbies').addEventListener('click',event=>{const code=event.target.dataset.joinCode;if(code){$('#join-form [name=roomCode]').value=code;$('#join-form [name=playerName]').focus();}});$('#refresh-lobbies').addEventListener('click',refreshPublic);$('#add-bot').addEventListener('click',()=>addBot().catch(error=>setStatus('#lobby-status',error.message)));$('#remove-bot').addEventListener('click',()=>removeBot().catch(error=>setStatus('#lobby-status',error.message)));$('#shuffle-seeds').addEventListener('click',shuffleSeeds);$('#seed-list').addEventListener('click',event=>{if(event.target.dataset.seedUp)reorderSeed(event.target.dataset.seedUp,-1);if(event.target.dataset.seedDown)reorderSeed(event.target.dataset.seedDown,1);});$('#bracket').addEventListener('click',event=>{const launch=event.target.dataset.launchMatch,complete=event.target.dataset.completeMatch;if(launch)launchTournamentMatch(launch).catch(error=>setStatus('#lobby-status',error.message));if(complete)completeMatchFromCard(complete,event.target.closest('.match-card')).catch(error=>setStatus('#lobby-status',error.message));});$('#spectator-arenas').addEventListener('click',event=>{if(event.target.dataset.watchMatch)ensureGuestTournamentConnection(state.room,event.target.dataset.watchMatch).catch(error=>setStatus('#lobby-status',error.message));});$('#copy-code').addEventListener('click',async()=>{await navigator.clipboard.writeText(`${location.origin}${location.pathname}?room=${state.room.meta.code}`);$('#copy-code').textContent='Copied';setTimeout(()=>$('#copy-code').textContent='Copy',1200);});$('#start-game').addEventListener('click',()=>(state.room.meta.kind==='tournament'?startTournament():startHostGame()).catch(error=>setStatus('#lobby-status',error.message)));$('#leave-lobby').addEventListener('click',()=>leaveCurrentRoom().catch(error=>setStatus('#lobby-status',error.message)));$('#exit-game').addEventListener('click',async()=>{if(state.room?.meta.kind==='tournament'){state.guestConnection?.close?.();state.guestConnection=null;state.guestMatchId=null;show(lobbyPage);}else{await leaveCurrentRoom();}});$('#fullscreen-game').addEventListener('click',()=>document.fullscreenElement?document.exitFullscreen():gamePage.requestFullscreen());document.addEventListener('mousemove',event=>{if(state.cameraMode)adjustCamera(event.movementX,event.movementY);});document.addEventListener('pointerlockchange',()=>{if(!document.pointerLockElement)state.cameraMode=false;});document.addEventListener('keydown',event=>{if(gamePage.classList.contains('hidden')&&!state.hostControl)return;if(event.code==='KeyC'&&!event.repeat){event.preventDefault();toggleCameraMode();return;}if(event.code==='ArrowLeft'&&(state.spectating||(state.module&&activeLocalSlot()>=0&&!state.module.ccall('web_player_active','number',['number'],[activeLocalSlot()])))){event.preventDefault();cycleSpectatorRider(-1);return;}if(event.code==='ArrowRight'&&(state.spectating||(state.module&&activeLocalSlot()>=0&&!state.module.ccall('web_player_active','number',['number'],[activeLocalSlot()])))){event.preventDefault();cycleSpectatorRider(1);return;}if(state.spectating&&event.code==='ArrowUp'){event.preventDefault();cycleTournamentArena(-1);return;}if(state.spectating&&event.code==='ArrowDown'){event.preventDefault();cycleTournamentArena(1);return;}keyboardAction(event,true);});document.addEventListener('keyup',event=>{if(gamePage.classList.contains('hidden')&&!state.hostControl)return;if(event.code==='KeyC')return;keyboardAction(event,false);});document.querySelectorAll('[data-action]').forEach(button=>{const action=Number(button.dataset.action);button.addEventListener('pointerdown',()=>sendAction(0,action,true));button.addEventListener('pointerup',()=>sendAction(0,action,false));button.addEventListener('pointercancel',()=>sendAction(0,action,false));});const inviteCode=cleanCode(new URLSearchParams(location.search).get('room')||'');if(inviteCode)$('#join-form [name=roomCode]').value=inviteCode;}
+async function initialize(){renderControlConfig();$('#control-config').addEventListener('keydown',captureControl);state.store=await createStore();if(state.store.mode==='local-server')setStatus('#landing-status','');if(state.store.mode==='local')setStatus('#landing-status','Offline lobby mode. Shared online rooms are unavailable.');await refreshPublic();state.stops.push(state.store.watch('rooms',refreshPublic));$('#session-kind').addEventListener('change',event=>{$('#tournament-settings').classList.toggle('hidden',event.target.value!=='tournament');$('#normal-match-points').classList.toggle('hidden',event.target.value==='tournament');});$('#create-form').addEventListener('submit',async event=>{event.preventDefault();const button=event.currentTarget.querySelector('[type=submit]');button.disabled=true;setStatus('#host-status','');try{await createLobby(event.currentTarget);}catch(error){setStatus('#host-status',error.message);}finally{button.disabled=false;}});$('#join-form').addEventListener('submit',async event=>{event.preventDefault();const button=event.currentTarget.querySelector('[type=submit]');button.disabled=true;setStatus('#landing-status','');try{await joinLobby(event.currentTarget);}catch(error){setStatus('#landing-status',error.message);}finally{button.disabled=false;}});$('#public-lobbies').addEventListener('click',joinPublicRoom);$('#refresh-lobbies').addEventListener('click',refreshPublic);$('#add-bot').addEventListener('click',()=>addBot().catch(error=>setStatus('#lobby-status',error.message)));$('#remove-bot').addEventListener('click',()=>removeBot().catch(error=>setStatus('#lobby-status',error.message)));$('#shuffle-seeds').addEventListener('click',shuffleSeeds);$('#seed-list').addEventListener('click',event=>{if(event.target.dataset.seedUp)reorderSeed(event.target.dataset.seedUp,-1);if(event.target.dataset.seedDown)reorderSeed(event.target.dataset.seedDown,1);});$('#bracket').addEventListener('click',event=>{const launch=event.target.dataset.launchMatch,complete=event.target.dataset.completeMatch;if(launch)launchTournamentMatch(launch).catch(error=>setStatus('#lobby-status',error.message));if(complete)completeMatchFromCard(complete,event.target.closest('.match-card')).catch(error=>setStatus('#lobby-status',error.message));});$('#spectator-arenas').addEventListener('click',event=>{if(event.target.dataset.watchMatch)ensureGuestTournamentConnection(state.room,event.target.dataset.watchMatch).catch(error=>setStatus('#lobby-status',error.message));});$('#copy-code').addEventListener('click',async()=>{await navigator.clipboard.writeText(`${location.origin}${location.pathname}?room=${state.room.meta.code}`);$('#copy-code').textContent='Copied';setTimeout(()=>$('#copy-code').textContent='Copy',1200);});$('#start-game').addEventListener('click',()=>(state.room.meta.kind==='tournament'?startTournament():startHostGame()).catch(error=>setStatus('#lobby-status',error.message)));$('#leave-lobby').addEventListener('click',()=>leaveCurrentRoom().catch(error=>setStatus('#lobby-status',error.message)));$('#exit-game').addEventListener('click',async()=>{if(state.room?.meta.kind==='tournament'){state.guestConnection?.close?.();state.guestConnection=null;state.guestMatchId=null;show(lobbyPage);}else{await leaveCurrentRoom();}});$('#fullscreen-game').addEventListener('click',()=>document.fullscreenElement?document.exitFullscreen():gamePage.requestFullscreen());document.addEventListener('mousemove',event=>{if(state.cameraMode)adjustCamera(event.movementX,event.movementY);});document.addEventListener('pointerlockchange',()=>{if(!document.pointerLockElement)state.cameraMode=false;});document.addEventListener('keydown',event=>{if(gamePage.classList.contains('hidden')&&!state.hostControl)return;if(event.code==='KeyC'&&!event.repeat){event.preventDefault();toggleCameraMode();return;}if(event.code==='ArrowLeft'&&(state.spectating||(state.module&&activeLocalSlot()>=0&&!state.module.ccall('web_player_active','number',['number'],[activeLocalSlot()])))){event.preventDefault();cycleSpectatorRider(-1);return;}if(event.code==='ArrowRight'&&(state.spectating||(state.module&&activeLocalSlot()>=0&&!state.module.ccall('web_player_active','number',['number'],[activeLocalSlot()])))){event.preventDefault();cycleSpectatorRider(1);return;}if(state.spectating&&event.code==='ArrowUp'){event.preventDefault();cycleTournamentArena(-1);return;}if(state.spectating&&event.code==='ArrowDown'){event.preventDefault();cycleTournamentArena(1);return;}keyboardAction(event,true);});document.addEventListener('keyup',event=>{if(gamePage.classList.contains('hidden')&&!state.hostControl)return;if(event.code==='KeyC')return;keyboardAction(event,false);});document.querySelectorAll('[data-action]').forEach(button=>{const action=Number(button.dataset.action);button.addEventListener('pointerdown',()=>sendAction(0,action,true));button.addEventListener('pointerup',()=>sendAction(0,action,false));button.addEventListener('pointercancel',()=>sendAction(0,action,false));});const inviteCode=cleanCode(new URLSearchParams(location.search).get('room')||'');if(inviteCode)$('#join-form [name=roomCode]').value=inviteCode;}
 
 const initialInviteCode=cleanCode(new URLSearchParams(location.search).get('room')||'');if(initialInviteCode)$('#join-form [name=roomCode]').value=initialInviteCode;
 addEventListener('blur',()=>{state.localPlayers.forEach((_,index)=>{for(const action of [3,4,5])sendAction(index,action,false);});});
 $('#return-arena').addEventListener('click',()=>{state.viewingBracket=false;ensureGuestTournamentConnection(state.room,state.guestMatchId).catch(error=>setStatus('#lobby-status',error.message));});
 $('#exit-game').addEventListener('click',event=>{if(state.room?.meta.kind!=='tournament')return;event.stopImmediatePropagation();state.viewingBracket=true;show(lobbyPage);renderLobby(state.room);},true);
-const savedName=localStorage.getItem('gltrof-player-name')||'Grid rider';
-for(const input of document.querySelectorAll('[name=playerName]')){
-  input.value=savedName;input.addEventListener('change',()=>rememberName(input.value));
-}
+setupLanding({rememberName,onFilter:renderPublicLobbies});
 $('#cancel-quick').addEventListener('click',()=>state.quickSearch?.abort());
-for(const key of ['gridSize','mode','speed']){const select=$('#quick-form [name='+key+']'),required=$('#quick-form [name=required-'+key+']');const update=()=>{required.disabled=!select.value;if(!select.value)required.checked=false;};select.addEventListener('change',update);update();}
 $('#quick-form').addEventListener('submit',event=>{event.preventDefault();quickMatch(event.currentTarget);});
 $('#play-again').addEventListener('click',()=>requestRematch().catch(error=>setStatus('#rematch-status',error.message)));
 $('#start-rematch').addEventListener('click',()=>startRematch().catch(error=>setStatus('#rematch-status',error.message)));
