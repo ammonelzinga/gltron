@@ -11,7 +11,7 @@ try {
   & node --input-type=module -e "import {loadEnv} from 'vite';const e={...loadEnv('production',process.cwd()),...process.env};for(const k of ['API_KEY','AUTH_DOMAIN','DATABASE_URL','PROJECT_ID','APP_ID'])if(!e['VITE_FIREBASE_'+k])throw Error('Set VITE_FIREBASE_'+k+' before packaging online play.');if(e.VITE_FIREBASE_PROJECT_ID.startsWith('demo-'))throw Error('Emulator projects cannot be published.');"
   if($LASTEXITCODE -ne 0){throw 'Production Firebase configuration is incomplete.'}
   if(-not(Test-Path -LiteralPath (Join-Path $webRoot 'public/game/build.json'))){throw 'Run build-game.ps1 first.'}
-  & npm run build:site
+  & node (Join-Path $webRoot 'node_modules/vite/bin/vite.js') build '--base=/digitalhive/gltrof/' '--outDir=dist-digitalhive'
   if($LASTEXITCODE -ne 0){throw 'Website build failed.'}
   $package=Join-Path $webRoot "site-package/$revision"
   $bundle=Join-Path $package 'bundle'
@@ -26,7 +26,7 @@ try {
   $bar='<body data-gltrof-online="true"><aside style="background:#0b1b24;color:#c0d8dd;padding:10px 20px;font:12px system-ui;display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between"><a href="/digitalhive/" style="color:#7ceef0">Digital Hive</a><span>Online play · Google sign-in for ranked</span><span><a href="/assets/gltrof-source.zip" style="color:#8aaeb9">Game source</a> · <a href="/assets/GLTROF-COPYING.txt" style="color:#8aaeb9">GPL license</a></span></aside>'
   if(-not $page.Contains('<body>')){throw 'Unexpected game page format.'}
   [IO.File]::WriteAllText($index,$page.Replace('<body>',$bar))
-  & git -c "safe.directory=$repoRoot" archive --format=zip "--output=$(Join-Path $assets 'gltrof-source.zip')" $revision -- gltron-0.706PlayerTeamSnake
+  & git -C $repoRoot -c "safe.directory=$repoRoot" archive --format=zip "--output=$(Join-Path $assets 'gltrof-source.zip')" $revision -- gltron-0.706PlayerTeamSnake
   if($LASTEXITCODE -ne 0){throw 'Could not package corresponding source.'}
   Copy-Item -LiteralPath (Join-Path $gameRoot 'COPYING') -Destination (Join-Path $assets 'GLTROF-COPYING.txt') -Force
   $provenance="glTrof source: https://github.com/ammonelzinga/gltron`nCommit: $revision`nGame path: /digitalhive/gltrof/`nFirebase web identifiers are embedded in this deployment. Configure your own project when rebuilding.`n"
