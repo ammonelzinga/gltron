@@ -2,6 +2,10 @@
 #include "game/game.h"
 
 void drawWalls(void) {
+#ifdef __EMSCRIPTEN__
+  glDisable(GL_LIGHTING);
+  glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+#endif
 #undef WALL_H
 #define WALL_H 48
   float t;
@@ -22,6 +26,7 @@ void drawWalls(void) {
   glEnable(GL_CULL_FACE);
   glEnable(GL_TEXTURE_2D);
   glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 #define T_TOP 1.0f
   glBindTexture(GL_TEXTURE_2D, gScreen->textures[TEX_WALL1]);
   glBegin(GL_QUADS);
@@ -76,6 +81,10 @@ void drawWalls(void) {
 
 int drawFloorTextured(int grid_size, GLuint texture) {
   int i, j, l, t;
+#ifdef __EMSCRIPTEN__
+  glDisable(GL_LIGHTING);
+  glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+#endif
   
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -93,12 +102,16 @@ int drawFloorTextured(int grid_size, GLuint texture) {
     for (i = 0; i < grid_size; i += l) {
       glBegin(GL_QUADS);
       for (j = 0; j < grid_size; j += l) {
+        glColor4f(1,1,1,1);
         glTexCoord2i(0, 0);
         glVertex2i(i, j);
+        glColor4f(1,1,1,1);
         glTexCoord2i(t, 0);
         glVertex2i(i + l, j);
+        glColor4f(1,1,1,1);
         glTexCoord2i(t, t);
         glVertex2i(i + l, j + l);
+        glColor4f(1,1,1,1);
         glTexCoord2i(0, t);
         glVertex2i(i, j + l);
       }

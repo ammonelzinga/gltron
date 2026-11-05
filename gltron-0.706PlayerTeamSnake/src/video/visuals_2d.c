@@ -5,6 +5,8 @@
 /* draw a 2d map */
 
 void draw2D( Visual *d ) {
+    glDisable(GL_LIGHTING);
+    glDisable(GL_TEXTURE_2D);
 		float width, height;
 		float border_left, border_bottom;
 		int i;
@@ -52,8 +54,11 @@ void draw2D( Visual *d ) {
 			glBegin(GL_QUADS);
 			glColor4f(0.7f, 0.7f, 0.7f, 0.3f);
 			glVertex2f(0, 0);
+			glColor4f(0.7f, 0.7f, 0.7f, 0.3f);
 			glVertex2f(w, 0);
+			glColor4f(0.7f, 0.7f, 0.7f, 0.3f);
 			glVertex2f(w, h);
+			glColor4f(0.7f, 0.7f, 0.7f, 0.3f);
 			glVertex2f(0, h);
 			glEnd();
 		}
@@ -68,9 +73,13 @@ void draw2D( Visual *d ) {
 				float h = game2->grid.height;
 				glColor3f(1, 1, 1);
 				glBegin(GL_LINE_LOOP);
+				glColor3f(1,1,1);
 				glVertex3f( 0, 0, 0 );
+				glColor3f(1,1,1);
 				glVertex3f( w, 0, 0 );
+				glColor3f(1,1,1);
 				glVertex3f( w, h, 0 );
+				glColor3f(1,1,1);
 				glVertex3f( 0, h, 0 );
 				glEnd();
 		}
@@ -86,6 +95,25 @@ void draw2D( Visual *d ) {
         if (p->data->trail_height <= 0) {
           continue;
         }
+#ifdef __EMSCRIPTEN__
+        /* Set color for every immediate vertex; constant colors can be cached
+           from the previous rider by the legacy WebGL renderer. */
+        glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+        glPointSize(4);
+        glBegin(GL_POINTS);
+        glColor4f(pV->pColorDiffuse[0],pV->pColorDiffuse[1],pV->pColorDiffuse[2],1);
+        glVertex2f(x,y);
+        glEnd();
+        glBegin(GL_LINES);
+        for(trail=p->data->trails;trail<=p->data->trails+p->data->trailOffset;trail++) {
+          glColor4f(pV->pColorDiffuse[0],pV->pColorDiffuse[1],pV->pColorDiffuse[2],1);
+          glVertex2f(trail->vStart.v[0],trail->vStart.v[1]);
+          glColor4f(pV->pColorDiffuse[0],pV->pColorDiffuse[1],pV->pColorDiffuse[2],1);
+          glVertex2f(trail->vStart.v[0]+trail->vDirection.v[0],trail->vStart.v[1]+trail->vDirection.v[1]);
+        }
+        glEnd();
+        continue;
+#endif
         
         if (p->data->trail_height < TRAIL_HEIGHT) {
           /* 

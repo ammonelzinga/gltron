@@ -5,9 +5,22 @@
 #include "Nebu_video.h"
 #include "Nebu_input.h"
 #include "Nebu_scripting.h"
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+EM_JS(int, web_local_riders, (int player), {
+  return (Module.webLocalCounts && Module.webLocalCounts[player]) || 1;
+});
+EM_JS(int, web_visible_rider, (int player), {
+  return Module.webVisibleSlots===undefined || (Module.webVisibleSlots & (1<<player)) ? 1 : 0;
+});
+#endif
 
 void displayGame(void) {
   drawGame();
+#ifdef __EMSCRIPTEN__
+  extern void web_frame_ready(void);
+  web_frame_ready();
+#endif
   SystemSwapBuffers();
 }
 
@@ -17,6 +30,10 @@ int initWindow(void) {
   unsigned char fullscreen = 0;
   /* char buf[20]; */
 
+#ifdef __EMSCRIPTEN__
+  setSettingi("width", 3072);
+  setSettingi("height", 1152);
+#endif
   SystemInitWindow(0, 0, getSettingi("width"), getSettingi("height"));
 
   if(getSettingi("windowMode") == 0) {
@@ -128,6 +145,10 @@ static void loadModels(void) {
 }
 
 void initVideoData(void) {
+#ifdef __EMSCRIPTEN__
+  setSettingi("width", 3072);
+  setSettingi("height", 1152);
+#endif
   gScreen = (Visual*) malloc(sizeof(Visual));
   gViewportType = getSettingi("display_type"); 
   
@@ -217,7 +238,18 @@ void initDisplay(Visual *d, int type, int p, int onScreen) {
   d->vp_y = gScreen->vp_y + vp_y[type][p] * field;
   d->vp_w = vp_w[type][p] * field;
   d->vp_h = vp_h[type][p] * field;
+#ifdef __EMSCRIPTEN__
+  /* Each rider is sent independently. Do not inherit desktop six-way panes. */
+  d->vp_x = (p % 3) * 1024;
+  d->vp_y = (p / 3) * 576;
+  d->vp_w = 1024;
+  d->vp_h = 576;
+  if (web_local_riders(viewport_content[p]) == 2) d->vp_h = 288;
+#endif
   d->onScreen = onScreen;
+#ifdef __EMSCRIPTEN__
+  d->onScreen=onScreen&&web_visible_rider(viewport_content[p]);
+#endif
 }  
 
 static void defaultViewportPositions(void) {
@@ -276,6 +308,9 @@ static void autoConfigureDisplay(void) {
 }
 
 void changeDisplay(int view) {
+#ifdef __EMSCRIPTEN__
+  defaultViewportPositions();updateDisplay(VP_SIXWAY);return;
+#endif
 
   /* passing -1 to changeDisplay tells it to use the view from settings */
   if (view == -1) {

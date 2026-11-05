@@ -48,17 +48,22 @@ void drawGlow(Camera *pCam, Player *pTarget, PlayerVisual *pV,
 
   glVertex3f(0,TRAIL_HEIGHT/2, 0);
   glColor4f(0,0,0,0.0);
-  glVertex3d(dim*cos(-0.2*3.1415/5.0),
+  glVertex3f(dim*cos(-0.2*3.1415/5.0),
 	     TRAIL_HEIGHT/2+dim*sin(-0.2*3.1415/5.0), 0);
-  glVertex3d(dim*cos(1.0*3.1415/5.0),
+  glColor4f(0,0,0,0.0);
+  glVertex3f(dim*cos(1.0*3.1415/5.0),
 	     TRAIL_HEIGHT/2+dim*sin(1.0*3.1415/5.0), 0);
-  glVertex3d(dim*cos(2.0*3.1415/5.0),
+  glColor4f(0,0,0,0.0);
+  glVertex3f(dim*cos(2.0*3.1415/5.0),
 	     TRAIL_HEIGHT/2+dim*sin(2.0*3.1415/5.0), 0);
-  glVertex3d(dim*cos(3.0*3.1415/5.0),
+  glColor4f(0,0,0,0.0);
+  glVertex3f(dim*cos(3.0*3.1415/5.0),
 	     TRAIL_HEIGHT/2+dim*sin(3.0*3.1415/5.0), 0);
-  glVertex3d(dim*cos(4.0*3.1415/5.0),
+  glColor4f(0,0,0,0.0);
+  glVertex3f(dim*cos(4.0*3.1415/5.0),
 	     TRAIL_HEIGHT/2+dim*sin(4.0*3.1415/5.0), 0);
-  glVertex3d(dim*cos(5.2*3.1415/5.0),
+  glColor4f(0,0,0,0.0);
+  glVertex3f(dim*cos(5.2*3.1415/5.0),
 	     TRAIL_HEIGHT/2+dim*sin(5.2*3.1415/5.0), 0);
   glEnd();
   polycount += 5;
@@ -72,7 +77,8 @@ void drawGlow(Camera *pCam, Player *pTarget, PlayerVisual *pV,
   glVertex3f(0,TRAIL_HEIGHT/2, 0);
   glColor4f(0,0,0,0.0);
   glVertex3f(0,-TRAIL_HEIGHT/4,0);
-  glVertex3d(dim*cos(-0.2f*3.1415/5.0),
+  glColor4f(0,0,0,0.0);
+  glVertex3f(dim*cos(-0.2f*3.1415/5.0),
 	     TRAIL_HEIGHT/2+dim*sin(-0.2*3.1415/5.0), 0);
 
   glColor4f(pV->pColorDiffuse[0], 
@@ -81,8 +87,9 @@ void drawGlow(Camera *pCam, Player *pTarget, PlayerVisual *pV,
 						alpha);
   glVertex3f(0,TRAIL_HEIGHT/2, 0);
   glColor4f(0,0,0,0.0);
-  glVertex3d(dim*cos(5.2*3.1415/5.0),
+  glVertex3f(dim*cos(5.2*3.1415/5.0),
 	     TRAIL_HEIGHT/2+dim*sin(5.2*3.1415/5.0), 0);
+  glColor4f(0,0,0,0.0);
   glVertex3f(0,-TRAIL_HEIGHT/4,0);
   glEnd();
   polycount += 3;
@@ -94,6 +101,12 @@ void drawGlow(Camera *pCam, Player *pTarget, PlayerVisual *pV,
 }
 
 void drawImpact(PlayerVisual *pV) {
+
+#ifdef __EMSCRIPTEN__
+  /* Six personal cameras render the same crash. Derive its age from the
+     simulation, rather than advancing the animation for every camera. */
+  pV->impact_radius = pV->exp_radius * (0.025f / EXP_RADIUS_DELTA);
+#endif
 
   glDisable(GL_LIGHTING);
   glPushMatrix();

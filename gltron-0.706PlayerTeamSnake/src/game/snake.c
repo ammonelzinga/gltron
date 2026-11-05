@@ -19,6 +19,19 @@ typedef struct {
 
 static SnakeBug g_bugs[MAX_BUGS];
 static int g_spawnCooldown = 0;
+#ifdef __EMSCRIPTEN__
+int web_snake_save(void *buffer) {
+  memcpy(buffer,g_bugs,sizeof(g_bugs));
+  memcpy((char*)buffer+sizeof(g_bugs),&g_spawnCooldown,sizeof(g_spawnCooldown));
+  return sizeof(g_bugs)+sizeof(g_spawnCooldown);
+}
+int web_snake_load(const void *buffer,int size) {
+  if(size!=sizeof(g_bugs)+sizeof(g_spawnCooldown))return 0;
+  memcpy(g_bugs,buffer,sizeof(g_bugs));
+  memcpy(&g_spawnCooldown,(const char*)buffer+sizeof(g_bugs),sizeof(g_spawnCooldown));
+  return 1;
+}
+#endif
 
 /* forward declarations for static helpers used before definition */
 static int count_active_bugs(void);

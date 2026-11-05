@@ -1,0 +1,9 @@
+.emsdk/
+web/dist/
+web/public/game/
+web/node_modules/
+web/playwright-report/
+web/test-results/
+web/.env
+web/.env.local
+web/.env.*.local

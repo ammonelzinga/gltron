@@ -20,7 +20,7 @@ float getDist(segment2 *s, float* eye) {
   tmp[0] = eye[0] - s->vStart.v[0];
   tmp[1] = eye[1] - s->vStart.v[1];
   if(n[0] == n[1] == 0) return length(tmp);
-  return abs(scalarprod2(n, tmp) / length(n));
+  return fabsf(scalarprod2(n, tmp) / length(n));
 }
 
 /*
@@ -120,10 +120,18 @@ void drawTrailLines(Player *p, PlayerVisual *pV) {
     
     if(s->vDirection.v[1] == 0) normal = normal1;
     else normal = normal2;
+#ifndef __EMSCRIPTEN__
     glNormal3fv(normal);
+#endif
     glVertex3f(s->vStart.v[0],
 							 s->vStart.v[1],
 							 height);
+#ifdef __EMSCRIPTEN__
+    /* Immediate WebGL attributes must be supplied for every vertex. The
+       first turn creates this segment; a partial color/normal record here
+       corrupts the emulator's stride for all subsequent draws. */
+    glColor4fv(trail_top);
+#endif
     glVertex3f(s->vStart.v[0] + s->vDirection.v[0],
 							 s->vStart.v[1] + s->vDirection.v[1],
 							 height);
@@ -192,11 +200,11 @@ void drawTrailShadow(Player* p, PlayerVisual *pV) {
 		int iOffset = 0;
 
 		TrailMesh mesh;
-		mesh.pVertices = (vec3*) malloc(1000 * sizeof(vec3));
-		mesh.pNormals = (vec3*) malloc(1000 * sizeof(vec3));
-		mesh.pColors = (unsigned char*) malloc(1000 * 4 * sizeof(float));
-		mesh.pTexCoords = (vec2*) malloc(1000 * sizeof(vec2));
-		mesh.pIndices = (unsigned short*) malloc(1000 * 2);
+		mesh.pVertices = (vec3*) malloc((MAX_TRAIL*4+32) * sizeof(vec3));
+		mesh.pNormals = (vec3*) malloc((MAX_TRAIL*4+32) * sizeof(vec3));
+		mesh.pColors = (unsigned char*) malloc((MAX_TRAIL*4+32) * 4);
+		mesh.pTexCoords = (vec2*) malloc((MAX_TRAIL*4+32) * sizeof(vec2));
+		mesh.pIndices = (unsigned short*) malloc((MAX_TRAIL*6+72) * sizeof(unsigned short));
 		mesh.iUsed = 0;
 		
 		trailGeometry(p, pV, &mesh, &vOffset, &iOffset);

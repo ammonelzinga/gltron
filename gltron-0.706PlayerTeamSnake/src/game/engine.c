@@ -41,6 +41,9 @@ void initGameStructures(void) { /* called only once */
 
 		p->ai = (AI*) malloc(sizeof(AI));
 		p->data = (Data*) malloc(sizeof(Data));
+#ifdef __EMSCRIPTEN__
+    p->data->trap_points_quarters=0;
+#endif
 		p->data->trails = (segment2*) malloc(MAX_TRAIL * sizeof(segment2));
 		p->data->trailOffset = 0;
 		p->camera = (Camera*) malloc(sizeof(Camera));
@@ -191,20 +194,43 @@ void resetScores(void) {
 	for(i = 0; i < game->players; i++)
 		game->player[i].data->score = 0;
 	for(i = 0; i < game->players; i++)
-		game->player[i].data->trail_kills = 0;
+		{ game->player[i].data->trail_kills = 0;
+#ifdef __EMSCRIPTEN__
+      game->player[i].data->trap_points_quarters=0;
+#endif
+    }
 }
 
 void doCrashPlayer(GameEvent *e) {
 	int j;
+#ifdef __EMSCRIPTEN__
+  extern int web_trap_policy;
+  extern int web_traps_outlasts(int,int);
+  extern void web_traps_award(const GameEvent*);
+  if(game->player[e->player].data->speed<=0)return;
+#endif
+#ifdef __EMSCRIPTEN__
+  /* Remove both rendering and collision geometry as soon as the crash resolves. */
+  if (game2->rules.eraseCrashed) game->player[e->player].data->trail_height=0;
+#endif
 
 	Audio_CrashPlayer(e->player);
 	Audio_StopEngine(e->player);
 
 	for(j = 0; j < game->players; j++) 
-		if(j != e->player && PLAYER_IS_ACTIVE(&(game->player[j])))
+		if(j != e->player &&
+#ifdef __EMSCRIPTEN__
+       (web_trap_policy==2&&e->cause>=1&&e->cause<=3 ? web_traps_outlasts(j,e->player) : PLAYER_IS_ACTIVE(&(game->player[j])))
+#else
+       PLAYER_IS_ACTIVE(&(game->player[j]))
+#endif
+       )
 			game->player[j].data->score++;
 
 	/* Additional scoring for trail kills if enabled */
+	#ifdef __EMSCRIPTEN__
+  if(web_trap_policy==2)web_traps_award(e);else
+#endif
 	if(getSettingi("trail_kill_scoring")) {
 		if(e->cause == 1) {
 			/* Trail collision: award killer if not self */
@@ -245,7 +271,7 @@ void doCrashPlayer(GameEvent *e) {
 		int crashed = e->player;
 		int crashedTeam = (crashed < 2) ? 0 : (crashed < 4) ? 1 : 2;
 		int creditTeam = -1;
-		if (e->cause == 1 && e->killer >= 0) {
+		if ((e->cause == 1 || e->cause == 3) && e->killer >= 0) {
 			int killerTeam = (e->killer < 2) ? 0 : (e->killer < 4) ? 1 : 2;
 			/* teammate hit should not grant respawn */
 			if (killerTeam != crashedTeam && e->killer != crashed) {

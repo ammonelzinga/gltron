@@ -11,13 +11,23 @@ void setupLights(int type) {
 	float posWorld1[] = { -1, -.8f, 0, 0 };
 
 	float posCycles0[] = { 0, 0, 0, 1 };
+#ifdef __EMSCRIPTEN__
+  /* Legacy emulation treats positions as directions; origin produces zero light. */
+  posCycles0[2] = 1.0f;
+  posCycles0[3] = 0.0f;
+#endif
 	
 	int i;
 	
 	// turn global ambient lighting off
 	glLightModelfv(GL_LIGHT_MODEL_AMBIENT, black);
-	glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, 1);
+#ifdef __EMSCRIPTEN__
+  { float fill[] = {0.8f,0.8f,0.8f,1}; glLightModelfv(GL_LIGHT_MODEL_AMBIENT, fill); }
+#endif
+	glLightModelf(GL_LIGHT_MODEL_TWO_SIDE, 1.0f);
+#ifndef __EMSCRIPTEN__
 	glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, 0);
+#endif
 
 	switch(type) {
 	case eWorld:

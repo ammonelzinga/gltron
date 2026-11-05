@@ -1,6 +1,12 @@
 #include "video/trail_geometry.h"
+#ifdef __EMSCRIPTEN__
+static int webColoredTrail;
+#endif
 								 
 void trailStatesNormal(Player *pPlayer, int texture) {
+#ifdef __EMSCRIPTEN__
+  webColoredTrail=1;
+#endif
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_NORMAL_ARRAY);
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -10,6 +16,10 @@ void trailStatesNormal(Player *pPlayer, int texture) {
 	glDisable(GL_CULL_FACE);
 	glShadeModel(GL_SMOOTH);
 	glEnable(GL_TEXTURE_2D);
+#ifdef __EMSCRIPTEN__
+  /* Color-material tracking is unavailable in the legacy WebGL emulator. */
+  glDisable(GL_LIGHTING);
+#endif
 	// glDisable(GL_TEXTURE_2D);
 	// glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	// glDisable(GL_LIGHTING);
@@ -19,7 +29,9 @@ void trailStatesNormal(Player *pPlayer, int texture) {
 	{ 
 		float black[] = { 0, 0, 0, 1 };
 		glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, black);
+#ifndef __EMSCRIPTEN__
 		glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
+#endif
 		glEnable(GL_COLOR_MATERIAL);
 	}
 
@@ -30,6 +42,9 @@ void trailStatesNormal(Player *pPlayer, int texture) {
 }
 
 void trailStatesShadowed(void) {
+#ifdef __EMSCRIPTEN__
+  webColoredTrail=0;
+#endif
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glDisableClientState(GL_NORMAL_ARRAY);
 	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -55,6 +70,29 @@ void trailStatesRestore(void) {
 void trailRender(TrailMesh *pMesh) {
 	if(pMesh->iUsed == 0)
 		return;
+#ifdef __EMSCRIPTEN__
+  /* Explicit untextured vertex colors keep walls opaque and match the bike.
+     The legacy decal/client-color path can discard the material color. */
+  {
+    int i;
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_NORMAL_ARRAY);
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+    glDisableClientState(GL_COLOR_ARRAY);
+    glDisable(GL_TEXTURE_2D);
+    glDisable(GL_LIGHTING);
+    if(webColoredTrail)glDisable(GL_BLEND);
+    glBegin(GL_TRIANGLES);
+    for(i=0;i<pMesh->iUsed;i++) {
+      int vertex=pMesh->pIndices[i];
+      unsigned char *color=pMesh->pColors+4*vertex;
+      if(webColoredTrail)glColor4f(color[0]/255.0f,color[1]/255.0f,color[2]/255.0f,1);
+      glVertex3fv(pMesh->pVertices[vertex].v);
+    }
+    glEnd();
+    return;
+  }
+#endif
 	
 	glVertexPointer(3, GL_FLOAT, 0, pMesh->pVertices);
 	glNormalPointer(GL_FLOAT, 0, pMesh->pNormals);

@@ -9,6 +9,7 @@ void checkGLError(const char *where) {
 }
 
 void rasonly(Visual *d) {
+  glDisable(GL_LIGHTING);
   /* do rasterising only (in local display d) */
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();

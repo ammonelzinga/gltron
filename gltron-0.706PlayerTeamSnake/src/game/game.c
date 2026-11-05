@@ -4,6 +4,15 @@
 void GameMode_Idle(void) {
 	Sound_idle();
 	Time_Idle();
+#ifdef __EMSCRIPTEN__
+  extern int web_replica_idle(void);
+  if(web_replica_idle()) { SystemPostRedisplay(); return; }
+#endif
+	if(game->pauseflag == PAUSE_GAME_SUSPENDED) {
+		game2->time.offset = SystemGetElapsedTime() - game2->time.current;
+		SystemPostRedisplay();
+		return;
+	}
 	if(game2->time.dt == 0)
 		return;
 	Game_Idle();

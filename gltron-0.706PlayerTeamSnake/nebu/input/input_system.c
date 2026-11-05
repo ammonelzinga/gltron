@@ -40,7 +40,7 @@ void SystemMouseMotion(int x, int y) {
       current->mouseMotion(x, y);
 }
 
-extern char* SystemGetKeyName(int key) {
+extern const char* SystemGetKeyName(int key) {
 	if(key < SYSTEM_CUSTOM_KEYS)
 		return SDL_GetKeyName(key);
 	else {
@@ -55,7 +55,7 @@ extern char* SystemGetKeyName(int key) {
 }  
 
 void SystemHandleInput(SDL_Event *event) {
-  char *keyname;
+  const char *keyname;
   int key, state;
   // int skip_axis_event = 0;
 	static int joy_axis_state[2] = { 0, 0 };

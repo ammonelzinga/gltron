@@ -67,7 +67,13 @@ void drawScore(Player *p, Visual *d) {
   int kills = p->data->trail_kills;
   int total = surv + kills;
   /* Show just numbers: total, survival, trail kills */
+#ifdef __EMSCRIPTEN__
+  extern double web_trap_points;
+  extern int web_trap_policy;
+  sprintf(tmp, "%.2f  %d  %d", surv+(web_trap_policy==2?0.25*p->data->trap_points_quarters:web_trap_points*kills), surv, kills);
+#else
   sprintf(tmp, "%d  %d  %d", total, surv, kills);
+#endif
   rasonly(d);
   glColor4f(1.0, 1.0, 0.2f, 1.0);
   if (gViewportType == VP_SIXWAY) {

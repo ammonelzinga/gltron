@@ -1,4 +1,4 @@
-#include "nebu_scripting.h"
+#include "Nebu_scripting.h"
 
 #include "lua.h"
 #include "lualib.h"

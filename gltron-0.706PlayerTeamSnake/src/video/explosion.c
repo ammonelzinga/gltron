@@ -22,12 +22,12 @@ static void drawWave(double radius) {
   double start_angle = 270.0 * (PI/180);
   
   for (i = 0; i < SHOCKWAVE_SEGMENTS; i++) {
-    glBegin(GL_QUAD_STRIP);
+    glBegin(GL_TRIANGLE_STRIP);
     angle = start_angle;
     for (j = 0; j <= SHOCKWAVE_SEGMENTS; j++) {
-      glVertex2d((radius + delta_radius) * sin(angle),
+      glVertex2f((float)((radius + delta_radius) * sin(angle)),
           (radius + delta_radius) * cos(angle));
-      glVertex2d(radius * sin(angle), radius * cos(angle));
+      glVertex2f((float)(radius * sin(angle)), (float)(radius * cos(angle)));
       angle += delta_angle;
     }
     glEnd();
@@ -83,7 +83,9 @@ static void drawSpires(float radius) {
   };
 
   glColor3f(1, 1, 1);
+#ifndef __EMSCRIPTEN__
   glVertex3f(0, 0, 0);
+#endif
  
   glBlendFunc(GL_ONE, GL_ONE);
 
@@ -98,7 +100,15 @@ static void drawSpires(float radius) {
 
     glColor4f(1,1,1,0.0);
     glVertex3fv(right);
+#ifdef __EMSCRIPTEN__
+    /* Explicit per-vertex colors avoid legacy WebGL's stale constant-color
+       shader state after the red shockwave pass. */
+    glColor4f(1,1,1,0.0);
+#endif
     glVertex3f(radius * vectors[i][0], radius * vectors[i][1], 0.0);
+#ifdef __EMSCRIPTEN__
+    glColor4f(1,1,1,0.0);
+#endif
     glVertex3fv(left);
   } 
   
@@ -122,7 +132,7 @@ static void drawImpactGlow(float glow_radius) {
 
   glColor4f(GLOW_INTENSITY, GLOW_INTENSITY, GLOW_INTENSITY, opacity);
   glDepthMask(0);
-  glBegin(GL_POLYGON);
+  glBegin(GL_QUADS);
   glTexCoord2f(0.0, 0.0); glVertex2f(-1.0, -1.0);
   glTexCoord2f(1.0, 0.0); glVertex2f(1.0, -1.0);
   glTexCoord2f(1.0, 1.0); glVertex2f(1.0, 1.0);
@@ -144,6 +154,8 @@ void drawExplosion(float *radius) {
     drawSpires(*radius);
   }
   
+#ifndef __EMSCRIPTEN__
   *radius += game2->time.dt * IMPACT_RADIUS_DELTA;
+#endif
 }
 

@@ -1,0 +1,25 @@
+{
+  "name": "gltrof-web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "vite build",
+    "test": "node --test tests/*.test.js",
+    "test:e2e": "playwright test",
+    "test:ui": "playwright test --ui",
+    "test:ranked": "playwright test --config=playwright.ranked.config.js",
+    "build:site": "vite build --base=/digitalhive/gltrof/ --outDir=dist-digitalhive",
+    "package:site": "powershell -NoProfile -ExecutionPolicy Bypass -File package-site.ps1"
+  },
+  "dependencies": {
+    "@firebase/app": "^0.16.2",
+    "@firebase/auth": "^1.13.6",
+    "@firebase/database": "^1.1.5"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.0",
+    "vite": "^7.1.0"
+  }
+}

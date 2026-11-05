@@ -70,7 +70,7 @@ enum {
 void SystemGrabInput();
 void SystemUngrabInput();
 
-char* SystemGetKeyName(int key);
+const char* SystemGetKeyName(int key);
 
 void SystemMouse(int buttons, int state, int x, int y);
 void SystemMouseMotion(int x, int y);

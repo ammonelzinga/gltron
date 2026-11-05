@@ -10,12 +10,13 @@ typedef enum {
 
 #define CRASH_CAUSE_TRAIL 1
 #define CRASH_CAUSE_WALL  2
+#define CRASH_CAUSE_BODY  3
 
 typedef struct GameEvent {
   int type; /* what */
   int player; /* who */
   int killer; /* opponent responsible, -1 if none */
-  int cause; /* 1=trail, 2=wall */
+  int cause; /* 1=trail, 2=wall, 3=cycle body */
   float x; /* where */
   float y;
   unsigned int timestamp;

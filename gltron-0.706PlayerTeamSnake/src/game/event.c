@@ -224,19 +224,8 @@ int applyWallAcceleration(int player, int dt) {
   do physics, create CRASH and STOP events
 */
 
-List* doMovement(int mode, int dt) {
-  int i;
-  List *l = NULL;
-	int shouldStop = 0;
-	int stopRep = -1;
-
-  for(i = 0; i < game->players; i++) {
-		Data *data = game->player[i].data;
-		PlayerVisual *pV = gPlayerVisuals + i;
-    if(data->speed > 0) { /* still alive */
-			float fs;
-			float t;
-
+static float movementDistance(int i,int dt) {
+  Data *data=game->player[i].data;float fs;
 			// speed boost:
 			float deccel = 0;
 			if(getSettingf("wall_accel_on") == 1) {
@@ -266,8 +255,32 @@ List* doMovement(int mode, int dt) {
 						(game2->time.current % SPEED_OZ_FREQ) * 
 						2.0f * PI / SPEED_OZ_FREQ);
 
-      t = dt / 100.0f * data->speed * fs;
-			
+      return dt / 100.0f * data->speed * fs;
+}
+
+List* doMovement(int mode, int dt) {
+  int i;
+  List *l = NULL;
+	int shouldStop = 0;
+	int stopRep = -1;
+#ifdef __EMSCRIPTEN__
+  extern int web_trap_policy;extern void web_traps_begin_frame(int,const float*);extern int web_traps_crash_test(int,const segment2*);
+  float distances[MAX_PLAYERS]={0};
+  if(web_trap_policy==2){for(i=0;i<game->players;i++)if(game->player[i].data->speed>0)distances[i]=movementDistance(i,dt);web_traps_begin_frame(dt,distances);}
+#endif
+
+  for(i = 0; i < game->players; i++) {
+		Data *data = game->player[i].data;
+		PlayerVisual *pV = gPlayerVisuals + i;
+    if(data->speed > 0) { /* still alive */
+			float fs;
+			float t;
+
+#ifdef __EMSCRIPTEN__
+      if(web_trap_policy==2)t=distances[i];else
+#endif
+      t=movementDistance(i,dt);
+
 			{
 				segment2 *current = data->trails + data->trailOffset;
 				segment2 movement;
@@ -288,8 +301,11 @@ List* doMovement(int mode, int dt) {
 									snake_enforceLength(i);
 								}
 
-				crash = crash || crashTestPlayers(i, &movement);
-				crash = crash || crashTestWalls(i, &movement);
+				#ifdef __EMSCRIPTEN__
+        if(web_trap_policy==2)crash=web_traps_crash_test(i,&movement);else
+#endif
+        {crash = crash || crashTestPlayers(i, &movement);
+         crash = crash || crashTestWalls(i, &movement);}
 
 								/* snake: check bug collision after movement */
 								if (gSettingsCache.snake_mode) {
@@ -529,7 +545,7 @@ void Game_Idle(void) {
 			l = doMovement(1, t); /* this can generate new events */
 			if(l != NULL) {
 				for(p = l; p->next != NULL; p = p->next) {
-					if(processEvent((GameEvent*) p->data));
+					processEvent((GameEvent*) p->data);
 				}
 
 			}

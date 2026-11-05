@@ -73,6 +73,9 @@ typedef struct Data {
 	int trailOffset;
   /* team-mode: which opponent team earns a respawn when this player crashes (-1: none) */
   int respawn_credit_team;
+#ifdef __EMSCRIPTEN__
+  int trap_points_quarters; /* exact 0.25/0.5/0.75/2 awards, serialized with Data */
+#endif
 } Data;
 
 typedef struct AI {
