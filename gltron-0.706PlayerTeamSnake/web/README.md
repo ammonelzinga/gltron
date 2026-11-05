@@ -14,7 +14,7 @@ The six-player GLTron fork is precompiled to WebAssembly. Browsers download the 
 - Up to six riders in Classic, Snake, 3 Teams, or Team Snake matches.
 - WebRTC data channels carry compressed simulation checkpoints and reliable controls. Each browser renders its own camera or local split screen. No video stream or dedicated game server.
 - Automatic coordinator handover preserves active matches and concurrent tournament arenas. Graceful Exit transfers immediately; a vanished host is replaced after its four-second lease expires. Cameras and glance stay local.
-- Quick match pools waiting riders and creates a public room automatically. Preferences are exact for ten seconds, then the closest available configuration wins. Each Absolutely required checkbox permanently locks its setting. Compatible pools start after a shared three-second countdown.
+- Quick match pools waiting riders and creates a public room automatically. Preferences are exact for ten seconds, then the closest available configuration wins. Each Absolutely required checkbox permanently locks its setting. Quick pools wait up to 30 seconds from the first search for four human riders; four or more humans start early without bots. Casual games with fewer than four humans fill remaining seats with native bots (Insane 50%, Smart 30%, Fair 15%, Dumb 5%). Ranked never fills with bots and keeps waiting if human opponents are missing. Each bot keeps its own native difficulty through rematches and host migration.
 - Tournaments for 2–128 entrants with 2–6 riders per heat, configurable qualifiers and championship size, first-to-N scoring, manual/join-order/random seeding, up to four simultaneous arenas, odd-field balancing, optional third-place matches, and late spectators.
 - Automatic score capture from the C game, round restarts until the points target is reached, advancing brackets, eliminated-rider spectator mode, and manual host score correction.
 - Anonymous Firebase identities and host-only room/tournament writes. Password-protected signaling is encrypted in the browser with PBKDF2 and AES-GCM.
@@ -79,3 +79,56 @@ Large tournaments are bracketed up to 128 entrants. The coordinator renders conf
 `native-network.spec.js` checks real WebRTC data channels, independent native engines, abrupt host departure, and parallel-arena recovery. `quick-queue.spec.js` checks pooled starts, the ten-second fallback, locked preferences and cancellation. `session-controls.spec.js` checks graceful Exit plus spectator rider/arena switching.
 
 For local Firebase rule verification, start `firebase emulators:start --only database --project demo-gltrof`, then run `node tests/firebase-rules.mjs`. The test uses separate simulated identities and checks simultaneous SDK slot claims, signaling access, coordinator handover, and denied unauthorized writes. It never connects to a production project.
+
+## Ranked play
+
+Casual is the default and never changes MMR. Ranked is an explicit choice in quick match or host setup; room-code joins show a second, explicit Join ranked action. Each browser’s Player 1 needs a different Google account. Split screen remains supported: local Players 2–4 participate as unranked guests, earn no personal rating, and add no browser votes. Bots and tournaments stay casual. Team Snake uses the Team ladder.
+
+Enable both Anonymous and Google providers in Firebase Authentication. Add your production domain to Authentication’s authorized domains, fill the existing web environment configuration, deploy the updated database rules, then rebuild. No Cloud Functions or separate rating server are required. Google popup login was tested through the local Authentication emulator, not a real Google account or production project.
+
+The ranked history lives under `rankedMatches`. The roster/voting membership is frozen before play. Each browser writes its own immutable full placement report under its Google UID. A unique highest vote count wins. An unbeatable majority may finalize early; otherwise reports have 30 seconds to arrive. After timeout, more than half of eligible browsers must have supplied valid reports. No quorum means no MMR update. Equal top vote counts use the host’s reported result if it is among the tied candidates; otherwise the host chooses between tied candidates. Genuine placement ties stay draws. Host migration preserves the ballot; missing clients cannot block an already unbeatable majority.
+
+Completed records are immutable. Clients reject inconsistent final selections and derive three independent rating histories (Normal, Snake, Team) from accepted results, ordered by server completion time and match ID. Hosts never receive write access to other users’ stored MMR. Replaying a match ID cannot award another update. The current design downloads and recomputes the accepted history, suitable for an initial community deployment; large histories will eventually need indexed snapshots.
+
+Ratings use published Glicko-2 equations with a 1500 starting rating, rating deviation 350 and volatility 0.06. FFA comparisons are weighted so a match is not treated as several independent games. Team results use team mean skill and uncertainty with a per-member contribution factor; this is a glTrof adaptation, not Valve’s private Dota formula. A provisional label appears for the first ten rated matches. Team standings use native team wins, not individual crash points.
+
+Peer reports cross-check the host-provided game state; they are not independent anti-cheat validation. Colluding accounts or a dishonest host can still undermine community rankings or withhold finalization. Rating mathematics and consensus are verified by clients; database rules protect identity, frozen records and write ownership rather than executing Glicko mathematics.
+
+For emulator verification:
+
+```text
+firebase emulators:start --only "database,auth" --project demo-gltrof
+node tests/firebase-rules.mjs
+node tests/ranked-rules.mjs
+node node_modules/@playwright/test/cli.js test --config=playwright.ranked.config.js
+```
+
+The separate ranked test config supplies dummy project settings and connects only to local emulators. Emulator environment variables are ignored in production builds.
+
+## World rankings and groups
+
+Open **Rankings** from the home screen for your selected ladder’s MMR, world position, match count, and top 10, 50, or 100 players. Equal rounded MMR shares a position; unplayed accounts are unranked. The list uses accepted match history, not editable profile scores. Normal, Snake, and Team remain independent. Team Snake shares Team.
+
+**Copy invite link** in any lobby produces a textable URL with its room code. Passwords are not included in lobby invite links. Group invites use a separate ?party=CODE link; opening it joins the group. Groups persist across match exits in the same browser tab. Names and local rider counts still come from the single home-screen identity bar.
+
+A group can contain up to six physical riders across browsers, including split-screen guests. Any member can host, join a public/private/password lobby, or search quick match for everyone. The queue counts the entire group’s riders and Google accounts. All members must be home, or already in the selected lobby; a group cannot pull someone out of another active match. Whole-group admission is a host-validated atomic room transaction: capacity failure never seats a partial group. Membership heartbeats expire after 15 seconds; lobby admission expires after 25 seconds if the host is unavailable. Leaving a group does not eject you from an existing match. Groups reserve match seats; team assignment still follows native slot pairs, so large groups may span teams. Tournament entrants can register together but the bracket may place them in different heats.
+
+Ranked groups require every browser’s distinct Google account plus its **Ready for ranked** checkbox. Only local Player 1 is rated; local guests add physical seats, not votes. Google identities are recorded under immutable rankedIdentities entries, protected by the actual Google authentication claim. The host checks those records and live membership before admitting a ranked group. Joining a password lobby shares its password only inside the group action, encrypted using the invite code; treat group codes as private invitations.
+
+Community browser checks: node node_modules/@playwright/test/cli.js test tests/e2e/community.spec.js --workers=1. Ranked emulator tests also cover consent-gated group hosting and leaderboard updates.
+
+Firebase queue regression: `node node_modules/@playwright/test/cli.js test --config=playwright.queue.config.js`. Requires local Auth/Database emulators. It covers Chrome + Edge using a cold queue with an existing revision, real 30-second waits, individual native bot levels, six-human early starts, and human-only ranked. Default browser tests explicitly disable production Firebase settings even when `.env.local` exists.
+
+New lobbies, quick matches and tournament heats default to 25 points to win. Rounds restart automatically until the match target is reached. Hosts may choose a different target.
+
+New matches use tiered trap scoring: distant trail 0.25, nearby trail owner 0.75, nearby opponent 0.5, physical cycle-body contact 2 points. Exactly one highest award per crash; equal awards prefer the actual trail owner, then nearest head, then a stable rider slot. No self-credit. Nearby is squared Euclidean distance within 0.3 seconds of the candidate’s instantaneous movement speed, including boost and native speed modulation. Individual points = survival plus awarded trap points; team points = team round wins plus teammates’ awarded trap points. Equal points are ordered by trap count; genuinely equal results share a place. Ranked uses the same native totals and tie-breaks for placements. Original scoring identifiers remain readable for historical match records. The scoreboard shows points plus separate survival/trap counts; rematches reset both counters. Tournament heat totals retain fractional points and use traps at a tied advancement cutoff, with host resolution still required for exact ties.
+
+Trap geometry runs in the authoritative native simulation. Current mesh bounds are cached once (10 units long, about 2.52 wide); body collision uses a swept rectangle to avoid tunneling. Tick-start motion and collision times are resolved for at most six riders, so earlier crashes remove bodies/erased trails consistently. Award selection is allocation-free and uses squared distances; it never scans trail history. Integer quarter-points are carried in protocol-2 checkpoints and cleared on rematches. Historical survival and flat-half-point scoring identifiers remain readable. Run `powershell -File tests/run-native-traps.ps1` for native C rule/geometry checks and an isolated award-selection benchmark. `tiered-traps.spec.js` exercises actual trail, nearby, wall, moving-body and simultaneous head-on crashes.
+
+## Publishing inside Digital Hive
+
+The source repository stays reusable: `.env.example` is blank, and your `.env.local` is excluded from Git. Configure your Firebase deployment locally, compile the engine, then run `npm run build:site` for the fixed `/digitalhive/gltrof/` address. Engine downloads, artwork, scripts, CSS, home links and invite URLs respect this prefix.
+
+After committing the source, run `npm run package:site`. This produces `site-package/gltrof-digitalhive.zip` containing `vendor/gltrof/`, `assets/gltrof-source.zip`, and `assets/GLTROF-COPYING.txt`. Copy those directories into the Zingabee website, then run its normal build and deployment. No Firebase setup is needed in the website itself. The compiled game includes the public Firebase web identifiers supplied at build time; source and local settings remain separate. The package includes the exact source commit and replaces older offline-preview banner wording without changing the website builder.
+
+Firebase Authentication must authorize the website hostname (for example `zingabeegames.com`). A URL path is not an authorized domain: use the hostname only. Firebase Hosting is optional; these static files work on the website’s existing host. Google client secrets and Firebase admin credentials are never part of the source or bundle.

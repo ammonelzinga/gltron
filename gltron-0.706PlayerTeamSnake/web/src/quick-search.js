@@ -1,5 +1,5 @@
 import {atomic} from './atomic.js';
-import {rankedRooms,updateQueue,PREFERENCE_WINDOW} from './quick-queue.js';
+import {rankedRooms,updateQueue,PREFERENCE_WINDOW,PLAYER_WAIT} from './quick-queue.js';
 
 export async function searchQueue({store,entry,signal,roomCode,onStatus,join,host}){
   const path='quickQueue';store.removeOnLeave?.(`${path}/entries/${entry.id}`);
@@ -15,10 +15,11 @@ export async function searchQueue({store,entry,signal,roomCode,onStatus,join,hos
           return;
         }
         if(assigned.status==='ready'&&await store.get(`rooms/${assigned.code}`)){
-          try{await join(assigned.code);return;}catch(error){if(!/already started|full|slot|No lobby/.test(error.message))throw error;await store.set(`${path}/entries/${entry.id}`,null);}
+          try{await join(assigned.code);return;}catch(error){if(!/already started|full|slot|No lobby|no longer/.test(error.message))throw error;entry.avoidGroups=[...new Set([...(entry.avoidGroups||[]),assigned.id])];await store.set(`${path}/entries/${entry.id}`,null);}
         }
       }else{
-        onStatus(elapsed<PREFERENCE_WINDOW?`Finding exact preferences... ${Math.max(0,Math.ceil((PREFERENCE_WINDOW-elapsed)/1000))}s`:'Finding the closest game. Absolutely required settings stay locked.');
+        const remaining=Math.max(0,Math.ceil((PLAYER_WAIT-elapsed)/1000));
+        onStatus((elapsed<PREFERENCE_WINDOW?'Finding exact preferences. ':'Finding the closest game. Absolutely required settings stay locked. ')+(entry.preferences.competition==='ranked'?'Waiting for human opponents; ranked never uses bots.':`Waiting for players: ${remaining}s before empty seats become bots.`));
         const rooms=rankedRooms(await store.get('rooms'),entry,now);
         for(const room of rooms){
           if(signal.aborted)return;

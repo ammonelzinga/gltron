@@ -10,7 +10,7 @@
   <body>
     <main id="app">
       <section id="landing" class="page-shell">
-        <nav class="landing-nav" aria-label="Main"><a class="wordmark" href="/">gl<span>Trof</span></a><span class="nav-caption">ZINGABEE GAMES / LIGHT CYCLES</span><button id="show-controls" class="quiet" type="button">Controls &amp; help</button></nav>
+        <nav class="landing-nav" aria-label="Main"><a class="wordmark" href="%BASE_URL%">gl<span>Trof</span></a><span class="nav-caption">ZINGABEE GAMES / LIGHT CYCLES</span><button id="open-rankings" disabled class="quiet" type="button">Rankings</button><button id="account-button" class="quiet" type="button">Sign in with Google</button><button id="show-controls" class="quiet" type="button">Controls &amp; help</button></nav>
         <header class="hero">
           <div class="hero-copy"><p class="eyebrow">The grid is yours</p><h1>gl<span>Trof</span></h1><p class="lede">Outride. Outlast.</p><p class="hero-caption">Six riders. Walls of light. One last cycle standing.</p><div class="hero-tags"><span>Original GLtron engine</span><span>Up to 4 on one keyboard</span></div></div>
           <img class="hero-bikes" src="/art/menu-bikes.png" alt="Gold and blue GLtron light cycles" />
@@ -21,19 +21,20 @@
           <label for="local-players">Players on this browser<select id="local-players" name="localPlayers"><option value="1">1 rider</option><option value="2">2 riders · split screen</option><option value="3">3 riders · split screen</option><option value="4">4 riders · split screen</option></select></label>
           <p id="name-help">Your name travels with you.<br /><span>Used for quick match, joining, hosting.</span></p>
         </section>
-        <p id="landing-status" class="status" role="status"></p>
+        <section class="rating-profile" aria-label="Ranked profile"><p id="account-status"></p><div id="rating-values" class="rating-values hidden"></div><p id="account-message" class="status" role="status"></p></section>
+        <section id="party-panel" class="panel party-panel" aria-label="Your group"><div class="section-title"><div><p class="eyebrow">Your crew, one match</p><h2>Group <span id="party-size" class="lobby-count"></span></h2></div><button id="party-create" disabled type="button" class="quiet">Create group</button></div><div id="party-join-row" class="code-row"><label class="sr-only" for="party-code">Group code</label><input id="party-code" maxlength="8" placeholder="GROUP CODE" autocomplete="off"/><button id="party-join" class="quiet" type="button">Join group</button></div><div id="party-active" class="hidden"><div class="party-tools"><strong id="party-label"></strong><button id="party-copy" type="button" class="quiet">Copy group invite</button><button id="party-leave" type="button" class="quiet danger">Leave group</button></div><ul id="party-members"></ul><label class="check"><input id="party-ranked" type="checkbox"/> Ready for ranked · my Player 1 MMR may change</label><p class="form-note">Any member can host, join, or find a match for the whole group. Up to six riders, including local guests. Everyone must be on the home screen. Ranked requires each browser’s Google sign-in and consent.</p></div><p id="party-status" role="status" class="status"></p></section><p id="landing-status" class="status" role="status"></p>
         <div class="play-options">
           <form id="quick-form" class="panel quick-panel">
             <div class="option-heading"><span class="option-kicker">01 / JUMP IN</span><span class="live-dot">PUBLIC PLAY</span></div>
-            <h2>Quick match</h2><p class="option-description">Find your next rivals. We’ll bring the grid together.</p>
-            <button class="primary quick-button" type="submit"><span>Join quick match</span><span aria-hidden="true">↗</span></button><button id="cancel-quick" class="quiet hidden" type="button">Cancel search</button>
+            <h2>Quick match</h2><p class="option-description">Wait up to 30 seconds for rivals. Four humans start without bots. Smaller casual groups get bot fill after the wait.</p>
+            <label class="competition-choice">Match type<select name="competition"><option value="casual">Casual · no MMR changes</option><option value="ranked">Ranked · Google sign-in required</option></select></label><p id="quick-ranked-note" class="ranked-note hidden">Ranked: only Player 1 earns MMR. Local Players 2–4 play as unranked guests.</p><button class="primary quick-button" type="submit"><span>Join quick match</span><span aria-hidden="true">↗</span></button><button id="cancel-quick" class="quiet hidden" type="button">Cancel search</button>
             <input name="password" type="hidden" value="" />
             <details id="quick-preferences" class="preference-settings"><summary>Match preferences <span id="preference-summary">Large grid · Any mode · Any speed</span></summary>
               <div class="quick-fields">
                 <div class="quick-preference"><label>Preferred grid<select name="gridSize"><option value="">Any size</option><option value="240">Small</option><option value="480">Standard</option><option value="720" selected>Large</option><option value="960">Vast</option></select></label><label class="requirement"><input type="checkbox" name="required-gridSize" /> Absolutely required</label></div>
                 <div class="quick-preference"><label>Game mode<select name="mode"><option value="">Any mode</option><option value="classic">Classic</option><option value="snake">Snake</option><option value="teams">3 Teams</option><option value="team-snake">Team Snake</option></select></label><label class="requirement"><input type="checkbox" name="required-mode" /> Absolutely required</label></div>
                 <div class="quick-preference"><label>Speed<select name="speed"><option value="">Any speed</option><option value="6">Cruise</option><option value="8.5">Classic</option><option value="11">Fast</option><option value="14">Extreme</option></select></label><label class="requirement"><input type="checkbox" name="required-speed" /> Absolutely required</label></div>
-              </div><p class="form-note">Exact preferences for 10 seconds, then the closest available match. Absolutely required settings always stay locked. Your local riders always stay together.</p>
+              </div><p class="form-note">Exact preferences for 10 seconds, then the closest available match. Absolutely required settings always stay locked. Your local riders always stay together. Four humans start early without bots; smaller casual groups fill remaining seats after 30 seconds. Ranked waits for humans.</p>
             </details>
             <p id="quick-status" class="status" role="status"></p>
           </form>
@@ -42,7 +43,7 @@
             <h2>Play with friends</h2><p class="option-description">Have an invite? Enter the room code.</p>
             <form id="join-form"><div class="code-row"><label class="sr-only" for="room-code-input">Room code</label><input id="room-code-input" name="roomCode" class="room-code-input" maxlength="8" required autocomplete="off" spellcheck="false" placeholder="ROOM CODE" /><button class="secondary" type="submit">Join lobby</button></div>
               <details id="join-password" class="password-settings"><summary>Room needs a password?</summary><label class="sr-only" for="join-room-password">Room password</label><input id="join-room-password" name="password" type="password" maxlength="64" autocomplete="current-password" placeholder="Enter room password" /></details>
-            </form>
+            <p id="join-match-notice" class="ranked-note hidden" role="status"></p></form>
             <div class="host-prompt"><div><strong>Make it your game.</strong><p>Custom rules, bots, full tournaments.</p></div><button class="quiet host-launch" type="button" data-open-host>Host a lobby <span aria-hidden="true">↗</span></button></div>
           </section>
         </div>
@@ -63,8 +64,8 @@
         <dialog id="host-dialog" aria-labelledby="host-heading">
           <div class="host-dialog-heading"><div><p class="eyebrow">Your grid. Your rules.</p><h2 id="host-heading">Host a lobby</h2></div><button id="close-host" class="quiet" type="button" aria-label="Close host setup">✕</button></div>
           <form id="create-form">
-            <fieldset class="host-group"><legend>Lobby</legend><label>Lobby name<input name="lobbyName" maxlength="40" required value="My light-cycle lobby" placeholder="Name your lobby" /></label><div class="field-row"><label>Session<select name="kind" id="session-kind"><option value="game">Single match</option><option value="tournament">Tournament</option></select></label><label>Visibility<select name="visibility"><option value="public">Public · listed for everyone</option><option value="private">Private · invite code only</option></select></label></div></fieldset>
-            <fieldset class="host-group"><legend>Game rules</legend><div class="field-row"><label>Mode<select name="mode"><option value="classic">Classic</option><option value="snake">Snake</option><option value="teams">3 Teams</option><option value="team-snake">Team Snake</option></select></label><label>Grid size<select name="gridSize"><option value="240">Small</option><option value="480">Standard</option><option value="720" selected>Large</option><option value="960">Vast</option></select></label></div><div class="field-row triple"><label>Speed<select name="speed"><option value="6">Cruise</option><option value="8.5" selected>Classic</option><option value="11">Fast</option><option value="14">Extreme</option></select></label><label id="normal-match-points">Points to win<input name="matchPoints" type="number" min="1" max="99" value="5" /></label><label>Bot difficulty<select name="botDifficulty"><option value="0">Dumb</option><option value="1">Fair</option><option value="2" selected>Smart</option><option value="3">Insane</option></select></label></div><p class="form-note">Add bots after creating your lobby. Up to six riders per match.</p></fieldset>
+            <label class="competition-choice">Match type<select name="competition"><option value="casual">Casual · no MMR changes</option><option value="ranked">Ranked · Google sign-in required</option></select></label><p id="create-ranked-note" class="ranked-note hidden">Ranked: only Player 1 earns MMR. Local Players 2–4 play as unranked guests. Ranked tournaments are not available; tournaments stay casual.</p><fieldset class="host-group"><legend>Lobby</legend><label>Lobby name<input name="lobbyName" maxlength="40" required value="My light-cycle lobby" placeholder="Name your lobby" /></label><div class="field-row"><label>Session<select name="kind" id="session-kind"><option value="game">Single match</option><option value="tournament">Tournament</option></select></label><label>Visibility<select name="visibility"><option value="public">Public · listed for everyone</option><option value="private">Private · invite code only</option></select></label></div></fieldset>
+            <fieldset class="host-group"><legend>Game rules</legend><div class="field-row"><label>Mode<select name="mode"><option value="classic">Classic</option><option value="snake">Snake</option><option value="teams">3 Teams</option><option value="team-snake">Team Snake</option></select></label><label>Grid size<select name="gridSize"><option value="240">Small</option><option value="480">Standard</option><option value="720" selected>Large</option><option value="960">Vast</option></select></label></div><div class="field-row triple"><label>Speed<select name="speed"><option value="6">Cruise</option><option value="8.5" selected>Classic</option><option value="11">Fast</option><option value="14">Extreme</option></select></label><label id="normal-match-points">Points to win<input name="matchPoints" type="number" min="1" max="99" value="25" /></label><label>Bot difficulty<select name="botDifficulty"><option value="0">Dumb</option><option value="1">Fair</option><option value="2" selected>Smart</option><option value="3">Insane</option></select></label></div><p class="form-note">Trap awards: trail 0.25; nearby trail owner 0.75; nearby opponent 0.5; cycle body 2 points. Only the highest award goes to one rider per crash. Nearby means 0.3 seconds of that rider’s current speed. Most traps breaks tied scores. Add bots after creating your lobby.</p></fieldset>
             <fieldset id="tournament-settings" class="tournament-settings hidden">
               <legend>Tournament format</legend>
               <div class="field-row triple">
@@ -74,7 +75,7 @@
               </div>
               <div class="field-row triple">
                 <label>Championship riders<select name="finalPlayers"><option selected>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select></label>
-                <label>Points to win<input name="pointsToWin" type="number" min="1" max="99" value="5" /></label>
+                <label>Points to win<input name="pointsToWin" type="number" min="1" max="99" value="25" /></label>
                 <label>Parallel arenas<select name="maxParallel"><option selected>1</option><option>2</option><option>3</option><option>4</option></select></label>
               </div>
               <label>Seeding<select name="seeding"><option value="random">Random draw</option><option value="join">Join order</option><option value="manual">Manual by host</option></select></label>
@@ -92,7 +93,7 @@
         </dialog>
       </section>
 
-      <section id="lobby" class="page-shell hidden">
+      <section id="rankings-page" class="page-shell hidden"><nav class="landing-nav"><a class="wordmark" href="%BASE_URL%">gl<span>Trof</span></a><button id="ranking-home" class="quiet" type="button">Back to play</button></nav><header class="ranking-header"><p class="eyebrow">World standings</p><h1>Your place on the grid.</h1><p class="muted">Separate ratings for every ladder. Casual games never change your MMR.</p></header><div class="ranking-summary"><article class="panel"><p class="eyebrow">Your MMR</p><strong id="your-rating">—</strong><p id="your-matches"></p></article><article class="panel"><p class="eyebrow">World position</p><strong id="your-position">Unranked</strong><p id="ranking-population"></p></article></div><section class="panel ranking-board"><div class="section-title"><h2>Leaderboard</h2><div class="party-tools"><label>Ladder<select id="ranking-mode"><option value="normal">Normal</option><option value="snake">Snake</option><option value="team">Team</option></select></label><label>Show<select id="ranking-limit"><option value="10">Top 10</option><option value="50">Top 50</option><option value="100">Top 100</option></select></label></div></div><div class="ranking-table"><table><thead><tr><th>World rank</th><th>Rider</th><th>MMR</th><th>Matches</th></tr></thead><tbody id="ranking-rows"></tbody></table></div><p id="ranking-empty" class="empty-state">The grid is open. Finish a ranked match to claim your place.</p><p class="form-note">* Provisional: fewer than 10 matches. Equal displayed MMR shares a position. Ratings use Glicko-2, adapted for multiplayer and teams.</p></section></section><section id="lobby" class="page-shell hidden">
         <header class="lobby-header">
           <div><p class="eyebrow">Lobby</p><h1 id="lobby-title">Loading…</h1></div>
           <button id="leave-lobby" class="quiet danger" type="button">Leave</button>
@@ -100,7 +101,7 @@
         <div class="lobby-layout">
           <section class="panel room-panel">
             <p class="eyebrow">Invite players</p>
-            <div class="invite-code"><strong id="room-code">------</strong><button id="copy-code" class="quiet" type="button">Copy</button></div>
+            <div class="invite-code"><strong id="room-code">------</strong><button id="copy-code" class="quiet" type="button">Copy invite link</button></div><label class="sr-only" for="lobby-invite">Lobby invite link</label><input id="lobby-invite" readonly aria-label="Lobby invite link" />
             <p id="invite-help" class="muted"></p>
             <div id="player-list" class="player-list"></div>
             <div id="bot-controls" class="bot-controls hidden"><button id="remove-bot" class="quiet" type="button">Remove bot</button><button id="add-bot" class="quiet" type="button">Add bot</button></div>
@@ -135,7 +136,7 @@
             <p id="rematch-count" class="muted"></p>
             <button id="play-again" class="secondary" type="button">Play again</button>
             <button id="start-rematch" class="primary hidden" type="button">Start rematch</button>
-            <p id="rematch-status" class="status" role="status"></p>
+            <div id="ranked-result" aria-live="polite"></div><p id="rematch-status" class="status" role="status"></p>
           </section>
         </div>
         <div class="mobile-controls"><button data-action="4" aria-label="Glance left">◁</button><button data-action="1" aria-label="Turn left">↶</button><button data-action="3" aria-label="Boost">BOOST</button><button data-action="2" aria-label="Turn right">↷</button><button data-action="5" aria-label="Glance right">▷</button></div>

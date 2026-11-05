@@ -1,0 +1,17 @@
+.rating-profile { margin:12px 0 0; color:#a79cb7; font-size:11px; }
+.rating-profile p { margin:7px 0; line-height:1.6; }
+.rating-profile p { overflow-wrap:anywhere; }
+.rating-values { display:flex; gap:8px; flex-wrap:wrap; }
+.rating-values>span { display:grid; gap:4px; background:#13101f; border:1px solid #8d705a55; padding:10px 14px; }
+.rating-values strong { color:#e7c681; font:600 15px 'Chakra Petch',sans-serif; }
+.rating-values small { color:#a394b5; font-size:10px; }
+.competition-choice { margin:12px 0; font-size:11px; }
+.competition-choice select { padding:11px 12px; font-size:12px; border-color:#b09b5d55; }
+.ranked-note { color:#e1c68c; font-size:11px; line-height:1.7; padding:12px; border:1px solid #b09b5d55; background:#2e241c44; }
+#ranked-result p { color:#dbc696; font-size:12px; line-height:1.7; margin:12px 0; }
+#ranked-result button { font-size:11px; }
+.confirmed-standings { list-style:none; padding:10px 0; margin:10px 0 0; border-top:1px solid #917e5944; text-align:left; color:#c7c0d5; font-size:11px; line-height:1.8; }
+#rematch-panel { max-height:calc(100dvh - 110px); overflow-y:auto; }
+#account-message { color:#f0b6b6; }
+#account-button { font-size:11px; }
+@media(max-width:520px){.landing-nav{flex-wrap:wrap;}.landing-nav #account-button{margin-left:auto;font-size:10px;}.landing-nav #show-controls{margin-left:0;}.rating-values{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;}.rating-values>span{padding:8px;}.rating-values strong{font-size:12px;}}

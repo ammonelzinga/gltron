@@ -152,6 +152,12 @@ void doComputer(int player, int target) {
 	float d;
 	int opponent;
 	AI_Distances distances;
+#ifdef __EMSCRIPTEN__
+	extern int web_bot_level(int player);
+	int previous_level = gSettingsCache.ai_level;
+	/* Keep the original AI algorithms, with each browser bot's own difficulty. */
+	gSettingsCache.ai_level = web_bot_level(player);
+#endif
 
 	ai_getDistances(player, &distances);
 	ai_getClosestOpponent(player, &opponent, &d);
@@ -166,4 +172,7 @@ void doComputer(int player, int target) {
 	} else {
 		doComputerActive(player, opponent, &distances);
 	}
+#ifdef __EMSCRIPTEN__
+	gSettingsCache.ai_level = previous_level;
+#endif
 }

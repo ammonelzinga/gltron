@@ -1,14 +1,16 @@
+import {prepareQuickMatch} from './src/quick-queue.js';
+import {admitParty} from './src/party-admission.js';
 import {defineConfig} from 'vite';
 
 // Loopback-only, in-memory lobby/signaling for cross-browser local testing.
-export default defineConfig({plugins:[{
+export default defineConfig({server:{watch:{ignored:['**/playwright-report/**','**/test-results/**','**/test-results-ranked/**','**/visual-review/**','**/*-debug.log']}},plugins:[{
   name:'gltrof-local-lobbies',
   configureServer(server){
-    const state={rooms:{},signals:{},quickQueue:{}};
+    const state={rooms:{},signals:{},quickQueue:{},rankedMatches:{}};
     let version=0;const replies=new Map();
     const keys=path=>{
       const parts=String(path||'').split('/').filter(Boolean);
-      if(!['rooms','signals','quickQueue'].includes(parts[0])||parts.some(key=>['__proto__','prototype','constructor'].includes(key)))throw Error('Invalid path');
+      if(!['rooms','signals','quickQueue','rankedMatches','parties','rankedIdentities'].includes(parts[0])||parts.some(key=>['__proto__','prototype','constructor'].includes(key)))throw Error('Invalid path');
       return parts;
     };
     const read=path=>keys(path).reduce((value,key)=>value?.[key],state);
@@ -42,10 +44,10 @@ export default defineConfig({plugins:[{
           const room=request.room,code=room?.meta?.code;
           if(!/^[A-Z0-9]{6,8}$/.test(code))throw Error('Invalid room code');
           result=!state.rooms[code];if(result)state.rooms[code]=room;
-        }else if(request.action==='join'){
+        }else if(request.action==='prepareQuickMatch'){state.rooms[request.code]=prepareQuickMatch(state.rooms[request.code],request.now,request.bots);result=true;}else if(request.action==='admitParty'){state.rooms[request.code]=admitParty(state.rooms[request.code],request.request,request.players);result=true;}else if(request.action==='join'){
           const room=state.rooms[request.code],player=request.player;
           if(!room)throw Error('That lobby no longer exists.');
-          if(room.meta.started&&player.role!=='spectator')throw Error('That match has already started.');
+          if((room.meta.started||room.meta.starting)&&player.role!=='spectator')throw Error('That match has already started.');
           const players=room.players??={},entrants=room.meta.kind==='game'?6:room.tournament.config.maxEntrants+(room.meta.hostParticipates?0:1),capacity=player.role==='spectator'?entrants+64:entrants;
           if(players[player.id])result=players[player.id].slot;
           else{

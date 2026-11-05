@@ -20,6 +20,7 @@ export default defineConfig({
   webServer: {
     command: 'node ./node_modules/vite/bin/vite.js --host 127.0.0.1 --port 4173',
     url: 'http://127.0.0.1:4173',
-    reuseExistingServer: true
+    reuseExistingServer: true,
+    env:{VITE_FIREBASE_API_KEY:'',VITE_FIREBASE_DATABASE_URL:'',VITE_AUTH_EMULATOR_URL:'',VITE_DATABASE_EMULATOR_HOST:''}
   }
 });

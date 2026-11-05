@@ -9,7 +9,7 @@ export function normalizeTournamentConfig(input = {}) {
     playersPerHeat,
     advancePerHeat,
     finalPlayers,
-    pointsToWin: clamp(input.pointsToWin || 5, 1, 99),
+    pointsToWin: clamp(input.pointsToWin || 25, 1, 99),
     maxParallel: clamp(input.maxParallel || 1, 1, 4),
     seeding: ['join', 'random', 'manual'].includes(input.seeding) ? input.seeding : 'random',
     allowSpectators: input.allowSpectators !== false,
@@ -91,9 +91,9 @@ export function createTournament(players, configInput, manualOrder = [], random 
 
 export function rankMatch(match, scoresInput) {
   const scores = Object.fromEntries(match.playerIds.map(id => [id, clamp(scoresInput[id] ?? 0, 0, 999)]));
-  const placements = [...match.playerIds].sort((a, b) => scores[b] - scores[a]);
+  const placements = [...match.playerIds].sort((a, b) => scores[b] - scores[a] || (match.traps?.[b]||0)-(match.traps?.[a]||0));
   const cutoff = match.advanceCount;
-  if (placements.length > cutoff && scores[placements[cutoff - 1]] === scores[placements[cutoff]]) {
+  if (placements.length > cutoff && scores[placements[cutoff - 1]] === scores[placements[cutoff]] && (match.traps?.[placements[cutoff - 1]]||0)===(match.traps?.[placements[cutoff]]||0)) {
     throw new Error('Resolve the tie at the advancement cutoff before completing this match.');
   }
   if (Math.max(...Object.values(scores)) < match.pointsToWin) {

@@ -163,3 +163,5 @@ dl { margin:18px 0 0; } dt { color:#7f8ba0; font-size:12px; text-transform:upper
 .control-hint { text-align:center; color:#748096; font-size:12px; margin:0 0 12px; } kbd { border:1px solid #475169; padding:2px 6px; }
 @media (pointer:fine) and (min-width:900px) { .mobile-controls { display:none; } }
 @media(max-width:760px){.page-shell{padding-top:34px}.action-grid,.lobby-layout{grid-template-columns:1fr}.rules-panel{order:-1}.field-row,.field-row.triple,.check-grid{grid-template-columns:1fr}.lobby-card{grid-template-columns:1fr auto}.lobby-card .meta{display:none}.bracket-round{flex-basis:280px}.tournament-title{align-items:flex-start}.tournament-tools{align-items:flex-end;flex-direction:column}.player{align-items:flex-start}.player span{text-align:right}}
+
+.scoreboard small{display:block;font-size:11px;font-weight:400;color:#b8c7d6;margin-top:3px}

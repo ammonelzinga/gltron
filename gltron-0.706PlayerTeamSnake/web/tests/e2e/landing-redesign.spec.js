@@ -1,6 +1,13 @@
 import {test,expect} from '@playwright/test';
 import {openHost,openAdvanced,openPreferences,openJoinPassword} from './landing-helpers.js';
 
+test('public lobby refresh preserves keyboard focus on Join',async({context})=>{
+  const host=await context.newPage(),guest=await context.newPage();await host.goto('/');await openHost(host);await host.getByRole('button',{name:'Create lobby',exact:true}).click();await expect(host.locator('#lobby')).toBeVisible();const code=await host.locator('#room-code').textContent();
+  await guest.goto('/');await guest.locator('#lobby-search').fill(code);const button=guest.locator('.lobby-card [data-join-code]');await expect(button).toHaveCount(1);await button.focus();
+  const revision=await guest.evaluate(()=>window.__gltrof.publicRooms[0].authority.revision);
+  await expect.poll(()=>guest.evaluate(()=>window.__gltrof.publicRooms[0]?.authority.revision||0)).toBeGreaterThan(revision);await expect(button).toBeFocused();await guest.keyboard.press('Enter');await expect(guest.locator('#lobby')).toBeVisible();
+});
+
 test('one remembered identity, focused setup, responsive menu',async({page},info)=>{
   await page.setViewportSize({width:1440,height:1000});await page.goto('/');
   await expect(page.locator('input[name=playerName]')).toHaveCount(1);

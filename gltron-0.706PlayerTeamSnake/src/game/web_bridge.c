@@ -68,7 +68,7 @@ int web_snapshot_save(void) {
   int i;unsigned char *cursor=web_checkpoint+sizeof(WebCheckpointHeader);
   WebCheckpointHeader header={0};
   if(!game||game->players<1||game->players>MAX_PLAYERS)return 0;
-  header.magic=0x47545246;header.version=1;header.players=game->players;
+  header.magic=0x47545246;header.version=2;header.players=game->players;
   header.epoch=web_epoch;header.current=game2->time.current;
   header.pauseflag=game->pauseflag;header.winner=game->winner;header.running=game->running;
   memcpy(header.team_wins,game->team_wins,sizeof(header.team_wins));header.random=web_random_get();
@@ -90,7 +90,7 @@ int web_snapshot_load(void) {
   int i,size=web_receive_checkpoint(web_checkpoint,sizeof(web_checkpoint));
   WebCheckpointHeader header;unsigned char *cursor=web_checkpoint+sizeof(header),*end=web_checkpoint+size;
   if(size<sizeof(header))return 0;memcpy(&header,web_checkpoint,sizeof(header));
-  if(header.magic!=0x47545246||header.version!=1||header.bytes!=size||header.players!=game->players)return 0;
+  if(header.magic!=0x47545246||header.version!=2||header.bytes!=size||header.players!=game->players)return 0;
   /* Validate all record boundaries before mutating the live simulation. */
   for(i=0;i<header.players;i++) {
     WebCheckpointPlayer r;
@@ -121,7 +121,7 @@ EMSCRIPTEN_KEEPALIVE
 void web_drop_player(int slot) {
   GameEvent event={0};
   if(!game||slot<0||slot>=game->players||!PLAYER_IS_ACTIVE(game->player+slot))return;
-  event.player=slot;event.killer=-1;event.cause=2;
+  event.player=slot;event.killer=-1;event.cause=0;
   getPositionFromData(&event.x,&event.y,game->player[slot].data);
   doCrashPlayer(&event);
   { char setting[32];sprintf(setting,"ai_player%d",slot+1);setSettingi(setting,AI_NONE);game->player[slot].ai->active=AI_NONE; }
@@ -141,6 +141,20 @@ EM_JS(double, web_game_speed, (), { return Module.webGameSpeed || 8.5; });
 EM_JS(int, web_ai_level, (), {
   return Module.webAiLevel === undefined ? 2 : Module.webAiLevel;
 });
+extern int web_trap_policy;
+extern void web_traps_configure(void);
+EM_JS(int, web_initial_trap_policy, (), { return Module.webTrapPolicy || 0; });
+EM_JS(double, web_trap_bonus, (), { return Module.webTrapPoints === 0 ? 0 : 0.5; });
+double web_trap_points=0.5;
+EM_JS(int, web_initial_bot_level, (int player), {
+  const level=Module.webBotLevels?.[player] ?? Module.webAiLevel ?? 2;
+  return Number.isInteger(level) && level>=0 && level<=3 ? level : 2;
+});
+static int web_bot_levels[MAX_PLAYERS];
+EMSCRIPTEN_KEEPALIVE
+int web_bot_level(int player) {
+  return player>=0 && player<MAX_PLAYERS ? web_bot_levels[player] : 2;
+}
 EM_JS(void, web_frame_ready, (), {
   if (Module.webFrameReady) Module.webFrameReady();
 });
@@ -149,16 +163,19 @@ void web_start_browser_game(void) {
   int i;
   int player_count = web_player_count();
   web_replica=web_initial_replica();
+  web_trap_points=web_trap_bonus();web_trap_policy=web_initial_trap_policy();web_traps_configure();
   if (player_count < 1) player_count = 1;
   if (player_count > MAX_PLAYERS) player_count = MAX_PLAYERS;
   for (i = 0; i < MAX_PLAYERS; ++i) {
     char setting[32];
+    web_bot_levels[i]=web_initial_bot_level(i);
     sprintf(setting, "ai_player%d", i + 1);
     setSettingi(setting, i < player_count ? web_player_type(i) : AI_NONE);
   }
   setSettingi("grid_size", web_grid_size());
   setSettingf("speed", (float) web_game_speed());
   setSettingi("ai_level", web_ai_level());
+  setSettingi("trail_kill_scoring", 1);
   setSettingi("snake_mode", web_snake_mode());
   setSettingi("team_mode", web_team_mode());
   setSettingi("erase_crashed", web_clear_trails());
@@ -271,10 +288,30 @@ void web_remote_action(int player, int action, int pressed) {
 }
 
 EMSCRIPTEN_KEEPALIVE
-int web_player_score(int player) {
-  if (!game || player < 0 || player >= game->players) return 0;
-  return game->player[player].data->score;
+double web_team_score(int team) {
+  int i,traps=0,quarters=0;
+  if(!game||team<0||team>=3)return 0;
+  for(i=team*2;i<team*2+2&&i<game->players;i++){traps+=game->player[i].data->trail_kills;quarters+=game->player[i].data->trap_points_quarters;}
+  return game->team_wins[team]+(web_trap_policy==2?quarters*0.25:web_trap_points*traps);
 }
+
+EMSCRIPTEN_KEEPALIVE
+double web_player_score(int player) {
+  if (!game || player < 0 || player >= game->players) return 0;
+  return game->player[player].data->score+(web_trap_policy==2?0.25*game->player[player].data->trap_points_quarters:web_trap_points*game->player[player].data->trail_kills);
+}
+
+EMSCRIPTEN_KEEPALIVE
+double web_player_trap_points(int player) {
+  if(!game||player<0||player>=game->players)return 0;
+  return web_trap_policy==2?0.25*game->player[player].data->trap_points_quarters:web_trap_points*game->player[player].data->trail_kills;
+}
+EMSCRIPTEN_KEEPALIVE
+int web_player_survival(int player) { return game&&player>=0&&player<game->players ? game->player[player].data->score : 0; }
+EMSCRIPTEN_KEEPALIVE
+int web_player_traps(int player) { return game&&player>=0&&player<game->players ? game->player[player].data->trail_kills : 0; }
+EMSCRIPTEN_KEEPALIVE
+int web_team_wins(int team) { return game&&team>=0&&team<3 ? game->team_wins[team] : 0; }
 
 EMSCRIPTEN_KEEPALIVE
 int web_player_active(int player) {
@@ -326,6 +363,8 @@ void web_new_match(void) {
   web_epoch++;
   for (i=0;i<game->players;i++) {
     game->player[i].data->score=0;
+    game->player[i].data->trail_kills=0;
+    game->player[i].data->trap_points_quarters=0;
     web_camera_targets[i]=-1;
   }
   for (i=0;i<3;i++) game->team_wins[i]=0;
