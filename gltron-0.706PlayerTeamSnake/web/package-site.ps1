@@ -20,10 +20,10 @@ try {
   New-Item -ItemType Directory -Force -Path $vendor,$assets | Out-Null
   Copy-Item -Path (Join-Path $webRoot 'dist-digitalhive/*') -Destination $vendor -Recurse -Force
   $index=Join-Path $vendor 'index.html'
-  $page=Get-Content -LiteralPath $index -Raw
+  $page=Get-Content -LiteralPath $index -Raw -Encoding utf8
   # The marker prevents older site wrappers from adding their obsolete offline
   # preview banner; this bundle supplies the current navigation and source links.
-  $bar='<body data-gltrof-online="true"><aside style="background:#0b1b24;color:#c0d8dd;padding:10px 20px;font:12px system-ui;display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between"><a href="/digitalhive/" style="color:#7ceef0">Digital Hive</a><span>Online play · Google sign-in for ranked</span><span><a href="/assets/gltrof-source.zip" style="color:#8aaeb9">Game source</a> · <a href="/assets/GLTROF-COPYING.txt" style="color:#8aaeb9">GPL license</a></span></aside>'
+  $bar='<body data-gltrof-online="true"><aside style="background:#0b1b24;color:#c0d8dd;padding:10px 20px;font:12px system-ui;display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between"><a href="/digitalhive/" style="color:#7ceef0">Digital Hive</a><span>Online play &middot; Google sign-in for ranked</span><span><a href="/assets/gltrof-source.zip" style="color:#8aaeb9">Game source</a> &middot; <a href="/assets/GLTROF-COPYING.txt" style="color:#8aaeb9">GPL license</a></span></aside>'
   if(-not $page.Contains('<body>')){throw 'Unexpected game page format.'}
   [IO.File]::WriteAllText($index,$page.Replace('<body>',$bar))
   & git -C $repoRoot -c "safe.directory=$repoRoot" archive --format=zip "--output=$(Join-Path $assets 'gltrof-source.zip')" $revision -- gltron-0.706PlayerTeamSnake
@@ -39,3 +39,4 @@ try {
   Write-Host "Website bundle: $archive"
   Write-Host "Source commit: $revision"
 } finally {Pop-Location}
+
