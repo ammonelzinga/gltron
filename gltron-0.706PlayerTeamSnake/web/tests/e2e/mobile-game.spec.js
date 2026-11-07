@@ -1,6 +1,19 @@
 import {test,expect} from '@playwright/test';
 import {openHost} from './landing-helpers.js';
 
+test('slow public lobby discovery cannot turn hosting into a page reload',async({page})=>{
+  let release,arrived,held=false;const gate=new Promise(resolve=>release=resolve),waiting=new Promise(resolve=>arrived=resolve);
+  await page.route('**/__gltrof_local',async route=>{
+    const data=route.request().method()==='POST'?route.request().postDataJSON():null;
+    if(!held&&data?.action==='get'&&data.path==='rooms'){held=true;arrived();await gate;}
+    await route.continue();
+  });
+  try{
+    await page.goto('/');await waiting;await openHost(page);await page.getByRole('button',{name:'Create lobby',exact:true}).click();
+    await expect(page.locator('#lobby')).toBeVisible();expect(page.url()).toMatch(/\?room=[A-Z0-9]+$/);
+  }finally{release();}
+});
+
 test('phone portrait and landscape fill viewport; touch steers, boost releases, split views resize',async({browser},info)=>{
   const context=await browser.newContext({viewport:{width:390,height:844},hasTouch:true,deviceScaleFactor:2});
   try{
