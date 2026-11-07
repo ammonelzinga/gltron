@@ -62,6 +62,15 @@ void initTexture(Visual *d) {
 				}
 #endif
       }
+#ifdef __EMSCRIPTEN__
+      { extern int web_texture_npot;
+        if(web_texture_npot){
+          glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+          glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_CLAMP_TO_EDGE);
+          glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE);
+        }
+      }
+#endif
       checkGLError("texture.c initTextures");
     }
   }

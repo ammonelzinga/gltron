@@ -185,6 +185,14 @@ void snake_enforceLength(int player) {
   }
 }
 
+static void bug_texcoord(float u,float v) {
+#ifdef __EMSCRIPTEN__
+  /* Focus the original padded artwork so the bug is legible on small screens. */
+  u=0.30f+0.40f*u;v=0.10f+0.80f*v;
+#endif
+  glTexCoord2f(u,v);
+}
+
 static void draw_bug_cross_billboard(float x, float y, float r) {
   float z0 = 0.01f;
   float h = 2.0f * r; /* total height */
@@ -192,29 +200,37 @@ static void draw_bug_cross_billboard(float x, float y, float r) {
 
   /* Quad in XZ plane (constant y) */
   glBegin(GL_QUADS);
-    glTexCoord2f(0.0f, 0.0f); glVertex3f(x - r, y, z0);
-    glTexCoord2f(1.0f, 0.0f); glVertex3f(x + r, y, z0);
-    glTexCoord2f(1.0f, 1.0f); glVertex3f(x + r, y, z1);
-    glTexCoord2f(0.0f, 1.0f); glVertex3f(x - r, y, z1);
+    glColor4f(1,1,1,1); bug_texcoord(0.0f, 0.0f); glVertex3f(x - r, y, z0);
+    glColor4f(1,1,1,1); bug_texcoord(1.0f, 0.0f); glVertex3f(x + r, y, z0);
+    glColor4f(1,1,1,1); bug_texcoord(1.0f, 1.0f); glVertex3f(x + r, y, z1);
+    glColor4f(1,1,1,1); bug_texcoord(0.0f, 1.0f); glVertex3f(x - r, y, z1);
   glEnd();
 
   /* Quad in YZ plane (constant x) */
   glBegin(GL_QUADS);
-    glTexCoord2f(0.0f, 0.0f); glVertex3f(x, y - r, z0);
-    glTexCoord2f(1.0f, 0.0f); glVertex3f(x, y + r, z0);
-    glTexCoord2f(1.0f, 1.0f); glVertex3f(x, y + r, z1);
-    glTexCoord2f(0.0f, 1.0f); glVertex3f(x, y - r, z1);
+    glColor4f(1,1,1,1); bug_texcoord(0.0f, 0.0f); glVertex3f(x, y - r, z0);
+    glColor4f(1,1,1,1); bug_texcoord(1.0f, 0.0f); glVertex3f(x, y + r, z0);
+    glColor4f(1,1,1,1); bug_texcoord(1.0f, 1.0f); glVertex3f(x, y + r, z1);
+    glColor4f(1,1,1,1); bug_texcoord(0.0f, 1.0f); glVertex3f(x, y - r, z1);
   glEnd();
 }
 
 void snake_drawBugs3D(void) {
   int i;
+#ifdef __EMSCRIPTEN__
+  int culling=glIsEnabled(GL_CULL_FACE);
+#endif
   if (!gSettingsCache.snake_mode) return;
   glDisable(GL_LIGHTING);
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glEnable(GL_TEXTURE_2D);
   glBindTexture(GL_TEXTURE_2D, gScreen->textures[TEX_BUG]);
+#ifdef __EMSCRIPTEN__
+  glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_REPLACE);
+  glDepthMask(GL_FALSE); /* Transparent sprite borders must not hide other bugs. */
+  glDisable(GL_CULL_FACE); /* Crossed sprites must be visible from both sides. */
+#endif
   glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
   for (i = 0; i < MAX_BUGS; i++) {
     if (!g_bugs[i].active) continue;
@@ -224,10 +240,10 @@ void snake_drawBugs3D(void) {
     glDisable(GL_TEXTURE_2D);
     glColor4f(0.0f, 0.0f, 0.0f, 0.25f);
     glBegin(GL_QUADS);
-      glVertex3f(x - r, y - r, 0.005f);
-      glVertex3f(x + r, y - r, 0.005f);
-      glVertex3f(x + r, y + r, 0.005f);
-      glVertex3f(x - r, y + r, 0.005f);
+      glColor4f(0,0,0,0.25f); glVertex3f(x - r, y - r, 0.005f);
+      glColor4f(0,0,0,0.25f); glVertex3f(x + r, y - r, 0.005f);
+      glColor4f(0,0,0,0.25f); glVertex3f(x + r, y + r, 0.005f);
+      glColor4f(0,0,0,0.25f); glVertex3f(x - r, y + r, 0.005f);
     glEnd();
     glEnable(GL_TEXTURE_2D);
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
@@ -235,6 +251,10 @@ void snake_drawBugs3D(void) {
   }
   glDisable(GL_TEXTURE_2D);
   glDisable(GL_BLEND);
+#ifdef __EMSCRIPTEN__
+  glDepthMask(GL_TRUE);
+  if(culling)glEnable(GL_CULL_FACE);
+#endif
 }
 
 void snake_drawBugsMinimap(void) {
@@ -252,10 +272,10 @@ void snake_drawBugsMinimap(void) {
     float r = BUG_RADIUS;
     /* flat icon on map */
     glBegin(GL_QUADS);
-      glTexCoord2f(0.0f, 0.0f); glVertex3f(x - r, y - r, 0.0f);
-      glTexCoord2f(1.0f, 0.0f); glVertex3f(x + r, y - r, 0.0f);
-      glTexCoord2f(1.0f, 1.0f); glVertex3f(x + r, y + r, 0.0f);
-      glTexCoord2f(0.0f, 1.0f); glVertex3f(x - r, y + r, 0.0f);
+      glColor4f(1,1,1,1); bug_texcoord(0.0f, 0.0f); glVertex3f(x - r, y - r, 0.0f);
+      glColor4f(1,1,1,1); bug_texcoord(1.0f, 0.0f); glVertex3f(x + r, y - r, 0.0f);
+      glColor4f(1,1,1,1); bug_texcoord(1.0f, 1.0f); glVertex3f(x + r, y + r, 0.0f);
+      glColor4f(1,1,1,1); bug_texcoord(0.0f, 1.0f); glVertex3f(x - r, y + r, 0.0f);
     glEnd();
   }
   glDisable(GL_TEXTURE_2D);

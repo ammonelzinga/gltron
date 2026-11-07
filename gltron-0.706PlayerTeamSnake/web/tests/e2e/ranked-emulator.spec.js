@@ -10,10 +10,25 @@ async function googleLogin(page,label,navigate=true){
   expect(new URL(popup.url()).origin).toBe('http://127.0.0.1:9099');
   await popup.getByText('Add new account',{exact:true}).click();
   await popup.getByLabel('Email', {exact:false}).fill(label+'-'+Date.now()+'@example.test');
+  await popup.getByLabel('Display name', {exact:false}).fill('Google '+label);
   await popup.getByRole('button',{name:/sign in/i}).click();
   await expect(page.locator('#account-button')).toHaveText('Sign out');
+  const googleName=await page.evaluate(()=>window.__gltrof.store.user.name);
+  await expect(page.locator('#player-name')).toHaveValue(googleName.slice(0,24));
+  await expect.poll(()=>page.evaluate(()=>window.__gltrof.ranked.profiles?.[window.__gltrof.store.uid]?.name)).toBe(googleName);
   await page.locator('#player-name').fill(label);
 }
+
+test('Google profile label stays separate from remembered game nickname',async({page})=>{
+  await googleLogin(page,'Custom Cycle Name');
+  const account=await page.evaluate(()=>window.__gltrof.store.user);
+  await page.reload();await expect(page.locator('#account-button')).toHaveText('Sign out');
+  await expect(page.locator('#player-name')).toHaveValue('Custom Cycle Name');
+  await expect.poll(()=>page.evaluate(()=>window.__gltrof.ranked.profiles?.[window.__gltrof.store.uid]?.name)).toBe(account.name);
+  await page.locator('#player-name').fill('Renamed Cycle');
+  expect(await page.evaluate(()=>window.__gltrof.store.uid)).toBe(account.uid);
+  expect(await page.evaluate(()=>window.__gltrof.ranked.profiles[window.__gltrof.store.uid].name)).toBe(account.name);
+});
 
 test('Google sign-in and sign-out preserve an existing group',async({browser})=>{
   const ca=await browser.newContext(),cb=await browser.newContext();

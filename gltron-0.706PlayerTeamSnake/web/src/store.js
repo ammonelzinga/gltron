@@ -1,7 +1,7 @@
 import {prepareQuickMatch} from './quick-queue.js';
 import {admitParty} from './party-admission.js';
 import { initializeApp } from '@firebase/app';
-import { getAuth, signInAnonymously, GoogleAuthProvider, linkWithPopup, signInWithPopup, signInWithCredential, signOut, onAuthStateChanged, connectAuthEmulator } from '@firebase/auth';
+import { getAuth, signInAnonymously, GoogleAuthProvider, linkWithPopup, signInWithPopup, signInWithCredential, signOut, onAuthStateChanged, connectAuthEmulator, updateProfile } from '@firebase/auth';
 import { getDatabase, get, onDisconnect, onValue, ref, query, orderByChild, equalTo, remove, runTransaction, set, serverTimestamp, connectDatabaseEmulator } from '@firebase/database';
 
 const LOCAL_KEY = 'gltrof-lobbies-v2';
@@ -123,7 +123,8 @@ class FirebaseStore {
     onValue(ref(this.db,'.info/serverTimeOffset'),snapshot=>{this.timeOffset=snapshot.val()||0;});
   }
   syncUser(user){
-    this.uid=user?.uid;this.user={uid:user?.uid,google:Boolean(user?.providerData.some(p=>p.providerId==='google.com')),name:user?.displayName||''};
+    const google=user?.providerData.find(p=>p.providerId==='google.com');
+    this.uid=user?.uid;this.user={uid:user?.uid,google:Boolean(google),name:google?.displayName||user?.displayName||''};
     this.authListeners?.forEach(fn=>fn(this.user));
   }
   async signInGoogle(){
@@ -160,7 +161,17 @@ class FirebaseStore {
   watch(path, callback, onError) { const target=path==='rooms'?query(ref(this.db,path),orderByChild('meta/public'),equalTo(true)):ref(this.db,path);return onValue(target, snapshot => callback(snapshot.val()), onError||(()=>{})); }
   async admitParty(code,request,players){let failure;const result=await runTransaction(ref(this.db,'rooms/'+code),room=>{if(!room)return;try{return admitParty(room,request,players);}catch(error){failure=error;return;}},{applyLocally:false});if(!result.committed)throw failure||Error('Group admission failed. Try again.');return true;}
   registerPartyDisconnect(code,id){onDisconnect(ref(this.db,'parties/'+code+'/members/'+id)).remove();}
-  async ensureGoogleIdentity(){if(this.user.google)await runTransaction(ref(this.db,'rankedIdentities/'+this.uid),current=>current===null?{uid:this.uid,createdAt:serverTimestamp()}:undefined,{applyLocally:false});}
+  async ensureGoogleIdentity(){
+    if(!this.user.google)return;
+    // Linking a guest may populate only the provider profile. Keep the Firebase
+    // display-name claim in sync before publishing that profile's public label.
+    if(this.user.name&&this.auth.currentUser.displayName!==this.user.name){
+      await updateProfile(this.auth.currentUser,{displayName:this.user.name});
+      await this.auth.currentUser.getIdToken(true);
+    }
+    await runTransaction(ref(this.db,'rankedIdentities/'+this.uid),current=>current===null?{uid:this.uid,createdAt:serverTimestamp()}:undefined,{applyLocally:false});
+    if(this.user.name)await set(ref(this.db,'rankedProfiles/'+this.uid),{name:this.user.name,updatedAt:serverTimestamp()});
+  }
   async create(room) {
     const target = ref(this.db, `rooms/${room.meta.code}`);
     const result = await runTransaction(target, current => current === null ? {...room,slots:Object.fromEntries(Object.values(room.players).map(p=>[p.slot,{uid:p.authUid,playerId:p.id,slot:p.slot}]))} : undefined);

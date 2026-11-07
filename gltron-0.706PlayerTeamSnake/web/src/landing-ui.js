@@ -1,3 +1,4 @@
+import {randomRiderName} from './rider-name.js';
 const $=selector=>document.querySelector(selector);
 
 export function riderFormData(form){
@@ -23,7 +24,7 @@ export function openHostSetup(){
 
 export function setupLanding({rememberName,onFilter}){
   const name=$('#player-name'),count=$('#local-players');
-  name.value=localStorage.getItem('gltrof-player-name')||'Grid rider';
+  name.value=localStorage.getItem('gltrof-player-name')||randomRiderName();
   name.addEventListener('input',()=>{name.setCustomValidity('');rememberName(name.value);});
   count.value=String(Math.max(1,Math.min(4,Number(sessionStorage.getItem('gltrof-local-players'))||1)));
   count.addEventListener('change',()=>sessionStorage.setItem('gltrof-local-players',count.value));

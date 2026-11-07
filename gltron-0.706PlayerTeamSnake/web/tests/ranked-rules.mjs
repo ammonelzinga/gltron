@@ -5,13 +5,21 @@ import {deriveRatings} from '../src/rating-history.js';
 const namespace='demo-gltrof-default-rtdb',base='http://127.0.0.1:9000';let checks=0;
 async function request(uid,path,method='GET',value,google=true){
   const query=new URLSearchParams({ns:namespace}),now=Math.floor(Date.now()/1000),encode=x=>Buffer.from(JSON.stringify(x)).toString('base64url');
-  if(uid)query.set('auth',encode({alg:'none',typ:'JWT'})+'.'+encode({aud:'demo-gltrof',iss:'https://securetoken.google.com/demo-gltrof',sub:uid,user_id:uid,iat:now,exp:now+3600,auth_time:now,firebase:{identities:google?{'google.com':[uid]}:{},sign_in_provider:google?'google.com':'anonymous'}})+'.');
+  if(uid)query.set('auth',encode({alg:'none',typ:'JWT'})+'.'+encode({aud:'demo-gltrof',iss:'https://securetoken.google.com/demo-gltrof',sub:uid,user_id:uid,name:'Google '+uid,iat:now,exp:now+3600,auth_time:now,firebase:{identities:google?{'google.com':[uid]}:{},sign_in_provider:google?'google.com':'anonymous'}})+'.');
   const response=await fetch(base+'/'+path+'.json?'+query,{method,headers:{'Content-Type':'application/json'},...(value===undefined?{}:{body:JSON.stringify(value)})});
   return {status:response.status,value:await response.json()};
 }
 async function allow(...args){const r=await request(...args);assert.equal(r.status,200,JSON.stringify({path:args[1],...r}));checks++;return r.value;}
 async function deny(...args){const r=await request(...args);assert.equal(r.status,401,JSON.stringify({path:args[1],...r}));checks++;}
 const stamp=()=>({'.sv':'timestamp'}),code='ELO'+Date.now(),path='rooms/'+code;
+const profile={name:'Google u0',updatedAt:stamp()};
+await allow('u0','rankedProfiles/u0','PUT',profile);
+await allow('u1','rankedProfiles/u0');
+await deny('u0','rankedProfiles/u0','PUT',{...profile,name:'Game nickname'});
+await deny('u1','rankedProfiles/u0','PUT',{...profile,name:'Google u1'});
+await deny('u0','rankedProfiles/u0','PUT',profile,false);
+await deny('u0','rankedProfiles/u0','DELETE');
+await deny('u0','rankedProfiles/u0','PUT',{...profile,email:'private@example.test'});
 const roster=Array.from({length:3},(_,slot)=>({id:'p'+slot,name:'Rider '+slot,browserId:'b'+slot,slot,localIndex:0,authUid:'u'+slot,ratedUid:'u'+slot,role:'player'}));
 const room={meta:{code,hostUid:'u0',createdAt:Date.now(),competition:'ranked',mode:'classic',kind:'game',matchPoints:1},authority:{revision:1,term:1,uid:'u0',browserId:'b0',playerId:'p0',leaseUntil:Date.now()+4000},players:Object.fromEntries(roster.map(p=>[p.id,p]))};
 for(const p of roster)if(!(await request(p.authUid,'rankedIdentities/'+p.authUid)).value)await allow(p.authUid,'rankedIdentities/'+p.authUid,'PUT',{uid:p.authUid,createdAt:stamp()});

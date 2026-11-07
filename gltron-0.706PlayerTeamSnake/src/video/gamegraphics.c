@@ -53,6 +53,8 @@ void drawGame(void) {
 			drawCam(p, pV);
       glDisable(GL_DEPTH_TEST);
       glDepthMask(GL_FALSE);
+#ifndef __EMSCRIPTEN__
+      /* Browser score/controls overlays replace the fixed-size desktop HUD. */
       if (gSettingsCache.show_scores)
 				drawScore(p, d);
       drawAcceleratorStatus(p, d);
@@ -61,6 +63,7 @@ void drawGame(void) {
       if (gSettingsCache.show_ai_status)
 				if(p->ai->active == AI_COMPUTER)
 					drawAI(d);
+#endif
     }
     glDepthMask(GL_TRUE);
     glEnable(GL_DEPTH_TEST);
@@ -374,10 +377,12 @@ void drawCam(Player *p, PlayerVisual* pV) {
                   gSettingsCache.clear_color);
   }
   /* draw snake pickups in world (upright sprites) */
+#ifndef __EMSCRIPTEN__
   {
     extern void snake_drawBugs3D(void);
     snake_drawBugs3D();
   }
+#endif
   
   /* glDepthMask(GL_FALSE); */
 
@@ -468,6 +473,10 @@ void drawCam(Player *p, PlayerVisual* pV) {
     glDisable(GL_BLEND);
     }
   }
+#ifdef __EMSCRIPTEN__
+  /* Transparent pickups follow opaque geometry and floor shadows. */
+  snake_drawBugs3D();
+#endif
 	/* 2d hack */
 	if(gSettingsCache.map_ratio_w > 0)
 	{
@@ -475,6 +484,10 @@ void drawCam(Player *p, PlayerVisual* pV) {
 		memcpy(&d2d, d, sizeof(Visual));
 		d2d.vp_w *= gSettingsCache.map_ratio_w;
 		d2d.vp_h *= gSettingsCache.map_ratio_h;
+#ifdef __EMSCRIPTEN__
+    /* A square, legible map stays at bottom-left in every screen shape. */
+    d2d.vp_w=d2d.vp_h=(int)fminf(d->vp_w*0.28f,d->vp_h*0.30f);
+#endif
 
 		d2d.vp_x += 20;
 		d2d.vp_y += 20;

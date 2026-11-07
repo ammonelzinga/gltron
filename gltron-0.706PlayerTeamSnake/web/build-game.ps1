@@ -38,7 +38,7 @@ $compilerArguments = @(
   '-sUSE_SDL=1','-sUSE_ZLIB=1','-sUSE_LIBPNG=1',
   '-sLEGACY_GL_EMULATION','-sGL_FFP_ONLY','-sALLOW_MEMORY_GROWTH=1',
   '-sEXIT_RUNTIME=0','-sFORCE_FILESYSTEM=1','-sMODULARIZE=1','-sEXPORT_ES6=1',
-  '-sEXPORT_NAME=createGLTronModule','-sEXPORTED_FUNCTIONS=_main,_web_set_replica,_web_snapshot_save,_web_snapshot_load,_web_drop_player,_web_new_match,_web_crash_state,_web_tick,_web_use_worker_clock,_web_set_camera_target,_web_control_state,_web_view_rect,_web_player_direction,_web_player_position,_web_remote_turn,_web_remote_action,_web_camera_adjust,_web_team_score,_web_bot_level,_web_player_score,_web_player_survival,_web_player_traps,_web_player_trap_points,_web_team_wins,_web_player_active,_web_prepare_game,_web_resume_game,_web_round_finished,_web_round_winner,_web_round_generation,_web_restart_round',
+  '-sEXPORT_NAME=createGLTronModule','-sEXPORTED_FUNCTIONS=_main,_web_set_replica,_web_snapshot_save,_web_snapshot_load,_web_drop_player,_web_new_match,_web_crash_state,_web_tick,_web_use_worker_clock,_web_set_camera_target,_web_control_state,_web_view_rect,_web_resize_views,_web_player_direction,_web_player_position,_web_remote_turn,_web_remote_action,_web_camera_adjust,_web_team_score,_web_bot_level,_web_player_score,_web_player_survival,_web_player_traps,_web_player_trap_points,_web_team_wins,_web_player_active,_web_prepare_game,_web_resume_game,_web_round_finished,_web_round_winner,_web_round_generation,_web_restart_round',
   '-sEXPORTED_RUNTIME_METHODS=ccall',
   '--preload-file','art@/art','--preload-file','data@/data',
   '--preload-file','music@/music','--preload-file','scripts@/scripts',

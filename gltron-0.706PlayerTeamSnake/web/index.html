@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#05070d" />
     <meta name="description" content="Create or join a six-player glTrof light-cycle match." />
     <title>glTrof</title>
@@ -93,7 +93,7 @@
         </dialog>
       </section>
 
-      <section id="rankings-page" class="page-shell hidden"><nav class="landing-nav"><a class="wordmark" href="%BASE_URL%">gl<span>Trof</span></a><button id="ranking-home" class="quiet" type="button">Back to play</button></nav><header class="ranking-header"><p class="eyebrow">World standings</p><h1>Your place on the grid.</h1><p class="muted">Separate ratings for every ladder. Casual games never change your MMR.</p></header><div class="ranking-summary"><article class="panel"><p class="eyebrow">Your MMR</p><strong id="your-rating">—</strong><p id="your-matches"></p></article><article class="panel"><p class="eyebrow">World position</p><strong id="your-position">Unranked</strong><p id="ranking-population"></p></article></div><section class="panel ranking-board"><div class="section-title"><h2>Leaderboard</h2><div class="party-tools"><label>Ladder<select id="ranking-mode"><option value="normal">Normal</option><option value="snake">Snake</option><option value="team">Team</option></select></label><label>Show<select id="ranking-limit"><option value="10">Top 10</option><option value="50">Top 50</option><option value="100">Top 100</option></select></label></div></div><div class="ranking-table"><table><thead><tr><th>World rank</th><th>Rider</th><th>MMR</th><th>Matches</th></tr></thead><tbody id="ranking-rows"></tbody></table></div><p id="ranking-empty" class="empty-state">The grid is open. Finish a ranked match to claim your place.</p><p class="form-note">* Provisional: fewer than 10 matches. Equal displayed MMR shares a position. Ratings use Glicko-2, adapted for multiplayer and teams.</p></section></section><section id="lobby" class="page-shell hidden">
+      <section id="rankings-page" class="page-shell hidden"><nav class="landing-nav"><a class="wordmark" href="%BASE_URL%">gl<span>Trof</span></a><button id="ranking-home" class="quiet" type="button">Back to play</button></nav><header class="ranking-header"><p class="eyebrow">World standings</p><h1>Your place on the grid.</h1><p class="muted">Separate ratings for every ladder. Casual games never change your MMR.</p></header><div class="ranking-summary"><article class="panel"><p class="eyebrow">Your MMR</p><strong id="your-rating">—</strong><p id="your-matches"></p></article><article class="panel"><p class="eyebrow">World position</p><strong id="your-position">Unranked</strong><p id="ranking-population"></p></article></div><section class="panel ranking-board"><div class="section-title"><h2>Leaderboard</h2><div class="party-tools"><label>Ladder<select id="ranking-mode"><option value="normal">Normal</option><option value="snake">Snake</option><option value="team">Team</option></select></label><label>Show<select id="ranking-limit"><option value="10">Top 10</option><option value="50">Top 50</option><option value="100">Top 100</option></select></label></div></div><div class="ranking-table"><table><thead><tr><th>World rank</th><th>Rider</th><th>MMR</th><th>Matches</th></tr></thead><tbody id="ranking-rows"></tbody></table></div><p id="ranking-empty" class="empty-state">The grid is open. Finish a ranked match to claim your place.</p><p class="form-note">* Provisional: fewer than 10 matches. Equal displayed MMR shares a position. Ratings use Glicko-2, adapted for multiplayer and teams. Leaderboards show your Google profile name; changing your game nickname never resets MMR.</p></section></section><section id="lobby" class="page-shell hidden">
         <header class="lobby-header">
           <div><p class="eyebrow">Lobby</p><h1 id="lobby-title">Loading…</h1></div>
           <button id="leave-lobby" class="quiet danger" type="button">Leave</button>
@@ -131,6 +131,8 @@
           <video id="remote-game" autoplay playsinline muted></video>
           <div id="game-loading" class="game-loading">Loading the grid…</div>
           <div id="scoreboard" class="scoreboard"></div>
+          <p class="touch-help">Tap left to turn left · Tap right to turn right · Hold BOOST</p>
+          <div id="arena-touch-controls" class="arena-touch-controls hidden"><button type="button" class="quiet" data-arena="-1" aria-label="Previous tournament game">↑ Game</button><button type="button" class="quiet" data-arena="1" aria-label="Next tournament game">↓ Game</button></div>
           <section id="rematch-panel" class="rematch-panel panel hidden" aria-live="polite">
             <p class="eyebrow">Match complete</p><h2 id="match-result"></h2>
             <p id="rematch-count" class="muted"></p>

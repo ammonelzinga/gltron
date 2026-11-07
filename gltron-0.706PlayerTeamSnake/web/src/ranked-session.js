@@ -10,7 +10,9 @@ export class RankedSession {
   }
   watchHistory(){
     this.historyStop?.();
+    this.profileStop?.();this.profiles={};
     if(!this.store.user?.uid)return;
+    this.profileStop=this.store.watch('rankedProfiles',profiles=>{this.profiles=profiles||{};this.onChange();});
     this.historyStop=this.store.watch('rankedMatches',records=>{this.records=records||{};this.ratings=deriveRatings(this.records);this.error='';this.onChange();},()=>{this.error='Deploy the updated Firebase rules to enable ranked match history.';this.onChange();});
   }
   update(room){
@@ -62,5 +64,5 @@ export class RankedSession {
     await this.store.putOnce('rankedMatches/'+this.id+'/final',{key,method,at:this.store.timestamp(),uid:this.store.uid});
   }
   settled(){return Boolean(this.ballot?.final&&(this.ballot.final.method==='void'||acceptedResult(this.ballot)));}
-  close(){this.closed=true;clearInterval(this.timer);this.stop?.();this.historyStop?.();this.authStop?.();}
+  close(){this.closed=true;clearInterval(this.timer);this.stop?.();this.historyStop?.();this.profileStop?.();this.authStop?.();}
 }

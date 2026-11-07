@@ -248,6 +248,9 @@ int web_view_rect(int player, int component) {
 }
 
 EMSCRIPTEN_KEEPALIVE
+void web_resize_views(void) { if(game&&gScreen)changeDisplay(-1); }
+
+EMSCRIPTEN_KEEPALIVE
 void web_camera_adjust(int player, double delta_x, double delta_y) {
   Camera *camera;
   if (!game || player < 0 || player >= game->players) return;

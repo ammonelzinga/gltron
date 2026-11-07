@@ -1,4 +1,5 @@
 #include "trap_rules.h"
+#include "../../src/include/video/texture.h"
 #include <assert.h>
 #include <stdio.h>
 #include <time.h>
@@ -10,6 +11,7 @@ static void award(int owner,int body_owner,int cause,int expected,int quarters){
   TrapAward a=trap_choose_award(&body,riders,6,0,owner,body_owner,cause,0,0);assert(a.player==expected);assert(a.quarters==quarters);checks++;
 }
 int main(void){float hit;int i;clock_t began;volatile int sum=0;
+  assert(TEX_BUG>=TEX_SKYBOX+6);checks++; /* pickup must not alias a skybox face */
   reset();riders[1].x=100;riders[1].y=0;award(1,-1,1,1,1); /* distant trail: .25 */
   riders[1].x=15;award(1,-1,1,1,3); /* nearby owner's trail: .75 */
   riders[2].x=10;riders[2].y=0;award(1,-1,1,1,3); /* .75 beats another rider's .5 */

@@ -2,6 +2,9 @@
 #include "filesystem/path.h"
 
 #include "Nebu_scripting.h"
+#ifdef __EMSCRIPTEN__
+int web_texture_npot=0;
+#endif
 
 void freeTextureData(texture *tex) {
   free(tex->data);
@@ -49,6 +52,14 @@ void loadTexture(const char *filename, int format) {
 #endif
   /* TODO: build mipmaps the proper way, box filters suck */
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+#ifdef __EMSCRIPTEN__
+  web_texture_npot=(tex->width&(tex->width-1))||(tex->height&(tex->height-1));
+  if(web_texture_npot){
+    /* WebGL 1 cannot mipmap the original 1536x1024 snake pickup artwork. */
+    glTexImage2D(GL_TEXTURE_2D,0,format,tex->width,tex->height,0,internal,GL_UNSIGNED_BYTE,tex->data);
+    freeTextureData(tex);return;
+  }
+#endif
 	
 	{
 		texture *newtex;
