@@ -11,7 +11,8 @@
     "test:ui": "playwright test --ui",
     "test:ranked": "playwright test --config=playwright.ranked.config.js",
     "build:site": "vite build --base=/digitalhive/gltrof/ --outDir=dist-digitalhive",
-    "package:site": "powershell -NoProfile -ExecutionPolicy Bypass -File package-site.ps1"
+    "package:site": "powershell -NoProfile -ExecutionPolicy Bypass -File package-site.ps1",
+    "test:mobile": "playwright test --config=playwright.mobile.config.js"
   },
   "dependencies": {
     "@firebase/app": "^0.16.2",

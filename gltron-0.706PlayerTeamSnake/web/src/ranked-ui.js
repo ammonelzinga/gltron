@@ -1,6 +1,7 @@
 import {initialRating} from './glicko2.js';
 import {tallyBallot,acceptedResult,ladderForMode} from './result-votes.js';
 import {deriveRatings} from './rating-history.js';
+import {syncRiderName} from './rider-name.js';
 const $=selector=>document.querySelector(selector);
 const names={normal:'Normal',snake:'Snake',team:'Team'};
 
@@ -62,7 +63,7 @@ export function setupRankedUI(state){
   $('#join-form [name=roomCode]').addEventListener('input',()=>showJoinCompetition(state,null,false));
   for(const form of ['quick','create'])$('#'+form+'-form [name=competition]').addEventListener('change',updateRankedChoices);
   $('#session-kind').addEventListener('change',updateRankedChoices);updateRankedChoices();
-  state.store.watchAuth(()=>renderRankedUI(state));
+  state.store.watchAuth(user=>{syncRiderName(user);renderRankedUI(state);});
   $('#account-button').addEventListener('click',async()=>{
     if(state.room)return;
     const partyCode=state.party?.code;

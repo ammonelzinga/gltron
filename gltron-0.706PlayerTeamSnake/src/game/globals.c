@@ -119,7 +119,7 @@ Quad *quadBuf;
 int *quadBufIndex;
 #endif
 
-int game_textures = TEX_COUNT + 5; /* base textures + extras + debug texture */
+int game_textures = TEX_COUNT;
 int n_textures = 12;
 
 #ifndef GL_VERSION_1_2

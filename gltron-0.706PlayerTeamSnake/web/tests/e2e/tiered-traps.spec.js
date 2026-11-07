@@ -9,7 +9,8 @@ test('real native crashes award one highest tier, including moving bike contact'
     {name:'nearby opponent beats distant trail owner',heads:[[100,100,3],[110,150,2],[118,108,0],[600,600,0]],points:[0,0,.5,0]},
     {name:'wall proximity',heads:[[958,100,3],[950,110,0],[400,400,0],[600,600,0]],points:[0,.5,0,0]},
     {name:'moving motorcycle contact ahead of trail',heads:[[100,100,3],[110,90,2],[400,400,0],[600,600,0]],points:[0,2,0,0]},
-    {name:'simultaneous head-on, one award per crash',heads:[[100,100,3],[115,100,1],[400,400,0],[600,600,0]],points:[2,2,0,0]},
+    {name:'simultaneous head-on awards neither rider',heads:[[100,100,3],[115,100,1],[400,400,0],[600,600,0]],points:[0,0,0,0]},
+    {name:'simultaneous head-on has no proximity fallback',heads:[[100,100,3],[115,100,1],[108,110,0],[600,600,0]],points:[0,0,0,0]},
   ];
   for(const scenario of cases){
     await page.evaluate(async({heads})=>{
@@ -29,7 +30,7 @@ test('real native crashes award one highest tier, including moving bike contact'
     },scenario);
     await expect.poll(()=>page.evaluate(()=>window.__gltrof.module.ccall('web_player_active','number',['number'],[0])),{timeout:6000,intervals:[20]},scenario.name).toBe(0);
     const result=await page.evaluate(()=>{const m=window.__gltrof.module;m.webClock.terminate();return [0,1,2,3].map(i=>({points:m.ccall('web_player_trap_points','number',['number'],[i]),traps:m.ccall('web_player_traps','number',['number'],[i]),survival:m.ccall('web_player_survival','number',['number'],[i])}));});
-    expect(result.map(r=>r.points),scenario.name).toEqual(scenario.points);expect(result.reduce((sum,r)=>sum+r.traps,0),scenario.name).toBe(scenario.name.startsWith('simultaneous')?2:1);
+    expect(result.map(r=>r.points),scenario.name).toEqual(scenario.points);expect(result.reduce((sum,r)=>sum+r.traps,0),scenario.name).toBe(scenario.name.startsWith('simultaneous')?0:1);
     if(scenario.name.startsWith('simultaneous'))expect(result.slice(0,2).map(r=>r.survival)).toEqual([0,0]);
   }
   await page.screenshot({path:`visual-review/tiered-traps-${info.project.name}.png`});

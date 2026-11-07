@@ -120,6 +120,16 @@
         }
       }
     },
+    "rankedProfiles": {
+      ".read": "auth != null",
+      "$uid": {
+        ".write": "auth != null && auth.uid == $uid && auth.token.firebase.identities['google.com'] != null && newData.exists()",
+        ".validate": "newData.hasChildren(['name','updatedAt']) && newData.child('name').isString() && newData.child('name').val().length > 0 && newData.child('name').val().length <= 256 && newData.child('name').val() == auth.token.name && newData.child('updatedAt').val() == now",
+        "name": {},
+        "updatedAt": {},
+        "$other": {".validate": false}
+      }
+    },
     "rankedIdentities": {
       ".read": "auth != null",
       "$uid": {

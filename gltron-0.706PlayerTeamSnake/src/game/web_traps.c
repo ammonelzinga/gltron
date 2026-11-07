@@ -81,6 +81,12 @@ void web_traps_award(const GameEvent *e) {
   TrapRider at_crash[MAX_PLAYERS];TrapAward award;int i;
   float fraction=frame_valid&&crash_at[e->player]!=FLT_MAX?crash_at[e->player]:1;
   if(e->cause<1||e->cause>3)return;
+  /* Mutual head-on contact is a draw, never a way to farm trap points.
+     Skip the whole award, including third-party proximity fallbacks. */
+  if(frame_valid&&e->cause==3&&e->killer>=0&&e->killer<game->players&&
+     chosen[e->killer].cause==3&&chosen[e->killer].owner==e->player&&
+     ((frame[e->player].dir+2)%4)==frame[e->killer].dir&&
+     fabsf(crash_at[e->player]-crash_at[e->killer])<=1e-6f)return;
   for(i=0;i<game->players;i++) {
     if(frame_valid){float t=fminf(fraction,crash_at[i]);at_crash[i]=frame[i];
       at_crash[i].x+=move_x[i]*t;at_crash[i].y+=move_y[i]*t;

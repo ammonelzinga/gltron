@@ -1,0 +1,28 @@
+/* Gameplay owns the viewport; site banners and page scroll stay outside it. */
+body.playing { overflow:hidden; overscroll-behavior:none; }
+body.playing .game-shell { position:fixed; inset:0; z-index:100; width:100%; height:100dvh; }
+.touch-help,.arena-touch-controls { display:none; }
+@media (pointer:coarse) {
+  .game-shell { grid-template-rows:minmax(0,1fr); touch-action:none; user-select:none; -webkit-user-select:none; }
+  .game-stage { grid-area:1/1; }
+  .game-bar { position:absolute; top:0; left:0; right:0; z-index:5; padding:calc(env(safe-area-inset-top) + 8px) max(12px,env(safe-area-inset-right)) 8px max(12px,env(safe-area-inset-left)); border:0; background:linear-gradient(#030911ed,#03091100); gap:8px; pointer-events:none; }
+  .game-bar strong { font-size:13px; letter-spacing:.08em; }
+  .game-bar #connection-status { font-size:10px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .game-bar button { min-height:34px; padding:6px 10px; font-size:11px; background:#07121bd9; pointer-events:auto; }
+  #player-view { touch-action:none; }
+  .scoreboard { top:calc(env(safe-area-inset-top) + 52px); left:max(10px,env(safe-area-inset-left)); right:max(10px,env(safe-area-inset-right)); max-width:none; gap:4px; padding:4px; border:1px solid #94c8e32b; border-radius:8px; background:#030a14a6; pointer-events:none; }
+  .scoreboard span { flex:1 1 28%; padding:3px 5px; min-width:0; font-size:11px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .scoreboard small { font-size:8px; margin-top:1px; }
+  .control-hint { display:none; }
+  .mobile-controls { position:absolute; z-index:5; right:max(12px,env(safe-area-inset-right)); bottom:calc(env(safe-area-inset-bottom) + 14px); gap:6px; padding:0; align-items:center; }
+  .mobile-controls button { width:42px; height:42px; border-radius:50%; font-size:19px; border-color:#66e8f36b; color:#c4faff; background:#071827b8; touch-action:none; -webkit-tap-highlight-color:transparent; }
+  .mobile-controls [data-action="3"] { width:70px; height:48px; border-radius:24px; font:700 12px 'Chakra Petch',sans-serif; letter-spacing:.06em; background:#0a3444cc; box-shadow:inset 0 0 14px #45d9ef22; }
+  .mobile-controls [data-action="1"],.mobile-controls [data-action="2"] { display:none; }
+  .mobile-controls button:active { background:#43dcec; color:#03151d; }
+  .touch-help { display:block; position:absolute; left:0; right:0; bottom:calc(env(safe-area-inset-bottom) + 74px); margin:0; text-align:center; color:#d5f5ffb5; font:10px Inter,sans-serif; pointer-events:none; text-shadow:0 1px 4px #000; animation:touch-help-fade 1s 7s forwards; }
+  @keyframes touch-help-fade { to { opacity:0; } }
+  .arena-touch-controls { position:absolute; right:max(12px,env(safe-area-inset-right)); top:48%; z-index:5; gap:6px; }
+  .arena-touch-controls:not(.hidden) { display:flex; }
+  .arena-touch-controls button { min-height:36px; padding:8px; background:#071827b8; font-size:10px; }
+  .rematch-panel { max-height:calc(100dvh - 120px); overflow:auto; padding:18px; width:min(420px,calc(100% - 28px)); }
+}

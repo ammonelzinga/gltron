@@ -13,6 +13,7 @@ EM_JS(int, web_local_riders, (int player), {
 EM_JS(int, web_visible_rider, (int player), {
   return Module.webVisibleSlots===undefined || (Module.webVisibleSlots & (1<<player)) ? 1 : 0;
 });
+EM_JS(double, web_view_aspect, (), { return Module.webViewAspect || 0; });
 #endif
 
 void displayGame(void) {
@@ -245,6 +246,14 @@ void initDisplay(Visual *d, int type, int p, int onScreen) {
   d->vp_w = 1024;
   d->vp_h = 576;
   if (web_local_riders(viewport_content[p]) == 2) d->vp_h = 288;
+  /* Fit each view to this browser's actual screen, including portrait phones.
+     Keep the six atlas cells disjoint; camera projection uses these dimensions. */
+  { double aspect=web_view_aspect();
+    if(aspect>0.1&&aspect<10){
+      d->vp_w=(int)fmin(1024.0,576.0*aspect);
+      d->vp_h=(int)fmin(576.0,1024.0/aspect);
+    }
+  }
 #endif
   d->onScreen = onScreen;
 #ifdef __EMSCRIPTEN__

@@ -24,7 +24,8 @@ enum {
   TEX_DECAL,
   TEX_DEBUG,
   TEX_SKYBOX,
-  TEX_BUG,
+  /* The skybox occupies six consecutive texture slots, not just one. */
+  TEX_BUG = TEX_SKYBOX + 6,
 	/* insert all texture tokens before TEX_COUNT */
 	TEX_COUNT
 };
